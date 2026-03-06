@@ -18,7 +18,6 @@ O **Sistema Orçamentário** é uma aplicação web completa para gerenciamento 
 sistema_orcamentario_monorepo/
 ├── backendSistemaOrcamentario/     # API Backend (Node.js + Express)
 ├── frontendSistemaOrcamentario/    # Frontend (React + Vite)
-│   └── sistemaOrcamentario/
 └── package.json                     # Configuração do monorepo
 ```
 
@@ -63,16 +62,6 @@ npm run dev:backend
 ```bash
 npm run dev:frontend
 ```
-
-## Configuração
-
-### Backend
-- O backend utiliza variáveis de ambiente definidas em um arquivo `.env`
-- Certifique-se de configurar o arquivo `.env` em `backendSistemaOrcamentario/`
-
-### Frontend
-- O frontend está configurado para rodar com Vite
-- Configurações podem ser ajustadas em `frontendSistemaOrcamentario/sistemaOrcamentario/vite.config.js`
 
 ## Desenvolvimento
 
