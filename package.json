@@ -1,0 +1,19 @@
+{
+  "name": "sistema-orcamentario-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo do Sistema Orçamentário - Backend e Frontend",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backendSistemaOrcamentario && npm run dev",
+    "dev:frontend": "cd frontendSistemaOrcamentario && npm run dev",
+    "install:all": "npm install && cd backendSistemaOrcamentario && npm install && cd ../frontendSistemaOrcamentario && npm install",
+    "install:backend": "cd backendSistemaOrcamentario && npm install",
+    "install:frontend": "cd frontendSistemaOrcamentario && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "author": "Higor Azevedo",
+  "license": "ISC"
+}
