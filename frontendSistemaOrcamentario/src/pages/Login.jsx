@@ -91,11 +91,9 @@ const Login = () => {
           </button>
 
           <div className="auth-footer">
-            <p>
-              Não tem uma conta?{' '}
-              <Link to="/cadastro" className="auth-link">
-                Cadastre-se aqui
-              </Link>
+            <p className="info-text">
+              Apenas usuários autorizados podem acessar o sistema.<br />
+              Contate o administrador para obter suas credenciais.
             </p>
           </div>
         </form>

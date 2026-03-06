@@ -61,6 +61,10 @@ const isAdmin = checkRole(['admin']);
 
 const isAdminOrManager = checkRole(['admin', 'manager']);
 
+const isOrcamentista = checkRole(['orcamentista']);
+
+const isAdminOrManagerOrOrcamentista = checkRole(['admin', 'manager', 'orcamentista']);
+
 const attachClienteId = async (req, res, next) => {
     try {
         if (!req.user) {
@@ -100,5 +104,7 @@ module.exports = {
     checkRole,
     isAdmin,
     isAdminOrManager,
+    isOrcamentista,
+    isAdminOrManagerOrOrcamentista,
     attachClienteId
 };

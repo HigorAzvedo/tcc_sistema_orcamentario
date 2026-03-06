@@ -7,7 +7,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import Home from './pages/Home'
 import Login from './pages/Login'
-import Cadastro from './pages/Cadastro'
 import Dashboard from './pages/Dashboard'
 import Orcamentos from './pages/Orcamentos'
 import Clientes from './pages/Clientes'
@@ -16,6 +15,8 @@ import Fornecedores from './pages/Fornecedores'
 import Materiais from './pages/Materiais'
 import Maquinario from './pages/Maquinario'
 import Orcamentistas from './pages/Orcamentistas'
+import OrcamentistaDetalhes from './pages/OrcamentistaDetalhes'
+import DashboardOrcamentista from './pages/DashboardOrcamentista'
 import Projetos from './pages/Projetos'
 import Areas from './pages/Areas'
 import Cargos from './pages/Cargos'
@@ -32,7 +33,6 @@ function App() {
         {/* Rotas públicas */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/cadastro" element={<Cadastro />} />
         
         {/* Rotas protegidas */}
         <Route
@@ -141,6 +141,26 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Orcamentistas />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orcamentistas/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <OrcamentistaDetalhes />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard-orcamentista"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DashboardOrcamentista />
               </Layout>
             </ProtectedRoute>
           }

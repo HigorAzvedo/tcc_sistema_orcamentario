@@ -7,7 +7,6 @@ module.exports = {
             const clientes = await db('Cliente').select('*');
             return clientes;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     },
@@ -21,7 +20,6 @@ module.exports = {
                 return existingClient;
             }
         } catch (error) {
-            console.log(error);
             throw error;
         }
     },
@@ -45,7 +43,6 @@ module.exports = {
             const result = await db('Cliente').insert(cliente);
             return result;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     },
@@ -91,9 +88,8 @@ module.exports = {
             if (cliente.usuarioId) {
                 try {
                     await db('Usuarios').where({ id: cliente.usuarioId }).del();
-                    console.log(`Usuário ${cliente.usuarioId} deletado junto com o cliente ${id}`);
                 } catch (userDeleteError) {
-                    console.error('Erro ao deletar usuário vinculado:', userDeleteError);
+                    // Silently continue if user deletion fails
                 }
             }
             
@@ -101,7 +97,7 @@ module.exports = {
             const result = await db('Cliente').where({ id: id }).del();
             return result;
         } catch (error) {
-            console.log(error);
+
             throw error;
         }
     },
@@ -111,7 +107,6 @@ module.exports = {
             const cliente = await db('Cliente').where({ usuarioId }).first();
             return cliente ? cliente : -1;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     },
@@ -123,7 +118,6 @@ module.exports = {
                 .update({ usuarioId });
             return result;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     },
@@ -135,7 +129,6 @@ module.exports = {
                 .update({ usuarioId: null });
             return result;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     }

@@ -7,7 +7,6 @@ module.exports = {
             const users = await clienteModel.findAll();
             return res.json(users);
         } catch (error) {
-            console.log(error);
             return res.status(500).json({ message: "Ocorreu um erro ao buscar os clientes." });
         }
     },

@@ -183,6 +183,13 @@
   margin: 0;
 }
 
+.auth-footer .info-text {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .auth-link {
   color: #007bff;
   text-decoration: none;

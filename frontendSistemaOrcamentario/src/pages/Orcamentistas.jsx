@@ -3,13 +3,15 @@ import Table from '../components/Table';
 import Modal from '../components/Modal';
 import Form from '../components/Form';
 import Loading from '../components/Loading';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
 
 const Orcamentistas = () => {
+  const navigate = useNavigate();
   const [orcamentistas, setOrcamentistas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,15 +69,27 @@ const Orcamentistas = () => {
 
   const createOrcamentista = async (orcamentistaData) => {
     try {
-      const response = await api.post('/orcamentistas/orcamentista', orcamentistaData); 
+      if (orcamentistaData.senha !== orcamentistaData.confirmarSenha) {
+        toast.error('As senhas não coincidem!');
+        return;
+      }
+
+      if (orcamentistaData.senha.length < 6) {
+        toast.error('A senha deve ter pelo menos 6 caracteres!');
+        return;
+      }
+
+      const { confirmarSenha, ...dataToSend } = orcamentistaData;
+
+      const response = await api.post('/orcamentistas/orcamentista', dataToSend); 
       if (response.status === 201) {
-        toast.success('Orçamentista criado com sucesso!');
+        toast.success('Orçamentista e usuário criados com sucesso!');
         setIsModalOpen(false);
         findAll();
       }
     } catch (error) {
-      console.error('Erro ao criar orçamentista:', error);
-      toast.error('Erro ao criar orçamentista.');
+      const errorMsg = error.response?.data?.message || 'Erro ao criar orçamentista.';
+      toast.error(errorMsg);
     }
   };
 
@@ -96,9 +110,17 @@ const Orcamentistas = () => {
   
 
   const orcamentistaFields = [
-    { name: 'nome', label: 'Nome', type: 'text', required: true },
+    { name: 'nome', label: 'Nome Completo', type: 'text', required: true },
+    { name: 'email', label: 'Email (usado para login)', type: 'email', required: true },
+    { name: 'matricula', label: 'Matrícula', type: 'text', required: true },
+    { name: 'senha', label: 'Senha', type: 'password', required: true, minLength: 6, placeholder: 'Mínimo 6 caracteres' },
+    { name: 'confirmarSenha', label: 'Confirmar Senha', type: 'password', required: true, minLength: 6, placeholder: 'Digite a senha novamente' },
+  ]
+
+  const orcamentistaFieldsEdit = [
+    { name: 'nome', label: 'Nome Completo', type: 'text', required: true },
     { name: 'email', label: 'Email', type: 'email', required: true },
-    { name: 'matricula', label: 'Matricula', type: 'text', required: false },
+    { name: 'matricula', label: 'Matrícula', type: 'text', required: true },
   ]
 
   const columns = [
@@ -111,8 +133,9 @@ const Orcamentistas = () => {
       accessor: "id",
       render: (id) => (
         <div className='container-acoes'>
-          <button className="btn-detalhes" onClick={() => editOrcamentista(id)}><FaEdit /></button>
-          <button className="btn-excluir" onClick={() => deleteOrcamentista(id)}><FaTrash /></button>
+          <button className="btn-detalhes" onClick={() => navigate(`/orcamentistas/${id}`)} title="Ver Detalhes e Vínculos"><FaEye /></button>
+          <button className="btn-detalhes" onClick={() => editOrcamentista(id)} title="Editar"><FaEdit /></button>
+          <button className="btn-excluir" onClick={() => deleteOrcamentista(id)} title="Excluir"><FaTrash /></button>
         </div>
       ),
     },
@@ -136,7 +159,7 @@ const Orcamentistas = () => {
           setEditingOrcamentista(null);
         }}>
           <Form
-            fields={orcamentistaFields}
+            fields={orcamentistaFieldsEdit}
             initialValues={editingOrcamentista}
             onSubmit={updateOrcamentista}
             submitButtonText="Atualizar"

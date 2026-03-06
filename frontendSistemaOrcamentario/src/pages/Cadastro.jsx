@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import api from '../service/api';
 import './Auth.css';
 import { FaHome, FaEye, FaEyeSlash } from 'react-icons/fa';
 
@@ -10,6 +11,7 @@ const Cadastro = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [matricula, setMatricula] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState('user');
@@ -19,9 +21,14 @@ const Cadastro = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!nome || !email || !senha || !confirmarSenha) {
       toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (role === 'orcamentista' && !matricula) {
+      toast.error('Matrícula é obrigatória para orçamentistas');
       return;
     }
 
@@ -36,14 +43,35 @@ const Cadastro = () => {
     }
 
     setLoading(true);
-    const result = await register(nome, email, senha, role);
-    setLoading(false);
-
-    if (result.success) {
-      toast.success('Cadastro realizado com sucesso! Faça login para continuar.');
-      navigate('/login');
-    } else {
-      toast.error(result.error || 'Erro ao cadastrar usuário');
+    
+    try {
+      if (role === 'orcamentista') {
+        await api.post('/orcamentistas/auto-cadastro', {
+          nome,
+          email,
+          matricula,
+          senha
+        });
+        
+        setLoading(false);
+        toast.success('Orçamentista cadastrado com sucesso! Faça login para continuar.');
+        navigate('/login');
+      } else {
+        const result = await register(nome, email, senha, role);
+        
+        if (result.success) {
+          setLoading(false);
+          toast.success('Cadastro realizado com sucesso! Faça login para continuar.');
+          navigate('/login');
+        } else {
+          setLoading(false);
+          toast.error(result.error || 'Erro ao cadastrar usuário');
+        }
+      }
+    } catch (error) {
+      setLoading(false);
+      const errorMsg = error.response?.data?.message || 'Erro ao realizar cadastro';
+      toast.error(errorMsg);
     }
   };
 
@@ -144,9 +172,29 @@ const Cadastro = () => {
               disabled={loading}
             >
               <option value="user">Usuário</option>
+              <option value="orcamentista">Orçamentista</option>
+              <option value="manager">Gerente</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
+
+          {role === 'orcamentista' && (
+            <div className="form-group">
+              <label htmlFor="matricula">Matrícula *</label>
+              <input
+                type="text"
+                id="matricula"
+                value={matricula}
+                onChange={(e) => setMatricula(e.target.value)}
+                placeholder="Ex: ORC001"
+                required
+                disabled={loading}
+              />
+              <small style={{ color: '#666', fontSize: '12px' }}>
+                Matrícula obrigatória para orçamentistas
+              </small>
+            </div>
+          )}
 
           <button
             type="submit"
