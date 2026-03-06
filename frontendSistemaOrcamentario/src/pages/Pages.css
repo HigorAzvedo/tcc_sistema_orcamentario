@@ -1,0 +1,63 @@
+.container-acoes {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-detalhes,
+.btn-excluir, 
+.btn-addItems, 
+.btn-showItems,
+.btn-success {
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-detalhes {
+  background-color: #007bffc8;
+  color: white;
+}
+
+.btn-detalhes:hover {
+  background-color: #0056b3;
+}
+
+.btn-excluir {
+  background-color: #dc3546d2;
+  color: white;
+}
+
+.btn-excluir:hover {
+  background-color: #c82333;
+}
+
+.btn-addItems {
+  background-color: #006400d1;
+  color: white;
+}
+
+.btn-addItems:hover {
+  background-color: #004d00;
+}
+
+.btn-showItems {
+  background-color: #eab31cb4;
+  color: white;
+}
+
+.btn-showItems:hover {
+  background-color: #eab31cd4;
+}
+
+.btn-success {
+  background-color: #28a745d2;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}

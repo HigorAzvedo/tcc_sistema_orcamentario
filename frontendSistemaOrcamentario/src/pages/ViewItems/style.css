@@ -1,0 +1,17 @@
+.show-items-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.show-items-header h2 {
+    font-size: 24px;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+
+.orcamento-nome {
+    color: #007bff;
+    font-weight: 700;
+}

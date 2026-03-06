@@ -1,0 +1,216 @@
+h1 {
+    font-size: 32px;
+}
+
+.containerDashboard {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.containerApresentacao {
+    background-color: #F1F8FE;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 50px;
+    text-align: center;
+    border-radius: 15px;
+}
+
+.containerApresentacao p {
+    line-height: 30px;
+
+}
+
+.btn-novo-orcamento {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 50px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-novo-orcamento:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.indicadores {
+    display: flex;
+    gap: 20px;
+    color: #000;
+
+}
+
+.indicadores span {
+    color: #000;
+    cursor: pointer;
+}
+
+.indicadores span:hover {
+    transition: .5s;
+    color: #007bff;
+}
+
+.dashboard-container {
+    padding: 20px;
+}
+
+.containerRecursos {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: space-around;
+    gap: 20px;
+    max-width: 600px;
+    flex-wrap: wrap;
+    margin-top: 70px;
+}
+
+.cards {
+    display: flex;
+    gap: 20px;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px 30px;
+    text-align: center;
+    width: 200px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-icon {
+    font-size: 3em;
+    color: #007bff;
+    margin-bottom: 15px;
+}
+
+.card h3 {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.card p {
+    font-size: 1em;
+    color: #555;
+}
+
+.container-acoes {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-detalhes, .btn-excluir {
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-detalhes {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-detalhes:hover {
+    background-color: #0056b3;
+}
+
+.btn-excluir {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-excluir:hover {
+    background-color: #c82333;
+}
+
+
+
+.containerProcesso {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: space-around;
+    gap: 20px;
+    max-width: 600px;
+    flex-wrap: wrap;
+    margin-top: 70px;
+    margin-bottom: 70px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.etapas{
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.etapa1 {
+    display: flex;
+    gap: 20px;
+}
+
+.numero {
+    background-color: #0F74C5;
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.numero span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.descricao {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.descricao h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.descricao p {
+    font-size: 16px;
+    color: #555;
+    text-align: justify;
+    font-weight: 400;
+}
+
+
+

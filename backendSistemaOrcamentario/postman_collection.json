@@ -1,0 +1,102 @@
+{
+  "name": "Sistema Orçamentário - Autenticação",
+  "description": "Collection para testar os endpoints de autenticação",
+  "requests": [
+    {
+      "name": "Register - Criar Usuário",
+      "method": "POST",
+      "url": "http://localhost:3000/auth/register",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "nome": "João Silva",
+        "email": "joao@example.com",
+        "senha": "senha123",
+        "role": "user"
+      }
+    },
+    {
+      "name": "Login - Admin",
+      "method": "POST",
+      "url": "http://localhost:3000/auth/login",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "email": "admin@sistema.com",
+        "senha": "admin123"
+      }
+    },
+    {
+      "name": "Login - Usuário",
+      "method": "POST",
+      "url": "http://localhost:3000/auth/login",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "email": "joao@example.com",
+        "senha": "senha123"
+      }
+    },
+    {
+      "name": "Get Profile (Me)",
+      "method": "GET",
+      "url": "http://localhost:3000/auth/me",
+      "headers": {
+        "Authorization": "Bearer SEU_TOKEN_AQUI"
+      }
+    },
+    {
+      "name": "Refresh Token",
+      "method": "POST",
+      "url": "http://localhost:3000/auth/refresh-token",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "token": "SEU_TOKEN_AQUI"
+      }
+    },
+    {
+      "name": "List All Users (Admin)",
+      "method": "GET",
+      "url": "http://localhost:3000/usuarios",
+      "headers": {
+        "Authorization": "Bearer SEU_TOKEN_ADMIN_AQUI"
+      }
+    },
+    {
+      "name": "Get User by ID (Admin)",
+      "method": "GET",
+      "url": "http://localhost:3000/usuarios/1",
+      "headers": {
+        "Authorization": "Bearer SEU_TOKEN_ADMIN_AQUI"
+      }
+    },
+    {
+      "name": "Update User (Admin)",
+      "method": "PUT",
+      "url": "http://localhost:3000/usuarios/1",
+      "headers": {
+        "Authorization": "Bearer SEU_TOKEN_ADMIN_AQUI",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "nome": "João Silva Atualizado",
+        "email": "joao.novo@example.com",
+        "role": "manager",
+        "ativo": true
+      }
+    },
+    {
+      "name": "Delete User (Admin)",
+      "method": "DELETE",
+      "url": "http://localhost:3000/usuarios/2",
+      "headers": {
+        "Authorization": "Bearer SEU_TOKEN_ADMIN_AQUI"
+      }
+    }
+  ]
+}

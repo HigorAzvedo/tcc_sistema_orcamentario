@@ -1,0 +1,53 @@
+.footer {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid #e0e0e0;
+    height: 100px;
+}
+
+.links {
+    display: flex;
+    gap: 15px;
+    cursor: pointer;
+}
+
+.links span:hover {
+    opacity: 0.8;
+    transition: .3s;
+
+}
+
+.redes-sociais {
+    display: flex;
+    gap: 20px;
+    cursor: pointer;
+}
+
+.redes-sociais a {
+    color: #000000be;
+    text-decoration: none;
+}
+
+
+.linkedin a:hover {
+    opacity: 0.8;
+    transition: .3s;
+    color: #0A66C2;
+}
+
+.facebook a:hover {
+    opacity: 0.8;
+    transition: .3s;
+    color: #4064AC;
+}
+
+.instagram a:hover {
+    opacity: 0.8;
+    transition: .3s;
+    color: #DD2A7B;
+ 
+}
+
