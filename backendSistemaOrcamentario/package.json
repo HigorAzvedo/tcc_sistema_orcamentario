@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "node index.js",
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "create-admin": "node scripts/createAdminInteractive.js",
+    "create-admin-quick": "node scripts/createAdmin.js",
+    "reset-password": "node scripts/resetPassword.js",
+    "generate-hash": "node scripts/generatePasswordHash.js"
   },
   "author": "Higor Azevedo",
   "license": "ISC",

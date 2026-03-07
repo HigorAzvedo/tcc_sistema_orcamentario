@@ -8,4 +8,6 @@ router.get('/:id', verifyLocalToken, isAdmin, usuariosController.show);
 router.put('/:id', verifyLocalToken, isAdmin, usuariosController.update);
 router.delete('/:id', verifyLocalToken, isAdmin, usuariosController.delete);
 
+router.put('/perfil/atualizar', verifyLocalToken, usuariosController.updateProfile);
+
 module.exports = router;
