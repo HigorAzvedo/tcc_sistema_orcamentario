@@ -12,7 +12,6 @@ const Home = () => {
         <img src="/logo-sem-fundo.png" alt="Logo" className="logo" />
           <div className="home-actions">
             <Link to="/login" className="btn-login">Entrar</Link>
-            <Link to="/cadastro" className="btn-register">Cadastrar</Link>
           </div>
         </div>
       </div>

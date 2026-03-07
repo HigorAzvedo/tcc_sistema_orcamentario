@@ -3,6 +3,7 @@ import Table from '../components/Table';
 import Modal from '../components/Modal';
 import Form from '../components/Form';
 import Loading from '../components/Loading';
+import PasswordInput from '../components/PasswordInput';
 import { FaEdit, FaTrash, FaUserPlus } from 'react-icons/fa';
 import './Pages.css';
 import HomePage from '../components/HomePage';
@@ -18,6 +19,11 @@ const Clientes = () => {
   const [selectedClientForUser, setSelectedClientForUser] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userFormData, setUserFormData] = useState({
+    nome: '',
+    email: '',
+    senha: ''
+  });
 
   const findAll = async () => {
     setLoading(true);
@@ -98,15 +104,35 @@ const Clientes = () => {
 
   const openCreateUserModal = (cliente) => {
     setSelectedClientForUser(cliente);
+    setUserFormData({
+      nome: cliente.nome,
+      email: cliente.email,
+      senha: ''
+    });
     setIsUserModalOpen(true);
   };
 
-  const createUserForClient = async (userData) => {
+  const handleUserFormChange = (e) => {
+    const { name, value } = e.target;
+    setUserFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleUserFormSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!userFormData.senha || userFormData.senha.length < 6) {
+      toast.error('A senha deve ter no mínimo 6 caracteres!');
+      return;
+    }
+
     try {
       const userResponse = await api.post('/auth/register', {
-        nome: userData.nome,
-        email: userData.email,
-        senha: userData.senha,
+        nome: userFormData.nome,
+        email: userFormData.email,
+        senha: userFormData.senha,
         role: 'user'
       });
 
@@ -121,6 +147,7 @@ const Clientes = () => {
           toast.success('Usuário criado e vinculado ao cliente com sucesso!');
           setIsUserModalOpen(false);
           setSelectedClientForUser(null);
+          setUserFormData({ nome: '', email: '', senha: '' });
           findAll();
         }
       }
@@ -152,12 +179,6 @@ const Clientes = () => {
         { value: 'pessoa', label: 'Pessoa' }
       ]
     }
-  ];
-
-  const userFields = [
-    { name: 'nome', label: 'Nome', type: 'text', required: true },
-    { name: 'email', label: 'Email', type: 'email', required: true, disabled: true },
-    { name: 'senha', label: 'Senha', type: 'password', required: true }
   ];
 
   const columns = [
@@ -214,14 +235,55 @@ const Clientes = () => {
         <Modal isOpen={isUserModalOpen} onClose={() => {
           setIsUserModalOpen(false);
           setSelectedClientForUser(null);
+          setUserFormData({ nome: '', email: '', senha: '' });
         }}>
-          <h2 style={{ marginBottom: '20px', color: '#333' }}>Criar Usuário para: {selectedClientForUser.nome}</h2>
-          <Form
-            fields={userFields}
-            initialValues={{ nome: selectedClientForUser.nome, email: selectedClientForUser.email }}
-            onSubmit={createUserForClient}
-            submitButtonText="Criar Usuário"
-          />
+          <h2>Criar Usuário para: {selectedClientForUser.nome}</h2>
+          <form onSubmit={handleUserFormSubmit}>
+            <div className="form-group">
+              <label htmlFor="nome">Nome *</label>
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                value={userFormData.nome}
+                onChange={handleUserFormChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={userFormData.email}
+                onChange={handleUserFormChange}
+                disabled
+                readOnly
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="senha">Senha *</label>
+              <PasswordInput
+                id="senha"
+                name="senha"
+                value={userFormData.senha}
+                onChange={handleUserFormChange}
+                placeholder="Mínimo 6 caracteres"
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="btn-primary">
+                Criar Usuário
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
     </>
