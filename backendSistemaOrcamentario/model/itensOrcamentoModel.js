@@ -1,6 +1,13 @@
 const db = require("../src/database/connection")
 const orcamentoModel = require('./orcamentoModel');
 
+const hasExactlyOneSelectedType = (itemBudget) => {
+    const selectedTypes = [itemBudget.idMaterial, itemBudget.idCargo, itemBudget.idMaquinario]
+        .filter(value => value !== null);
+
+    return selectedTypes.length === 1;
+};
+
 module.exports = {
 
     async findAll() {
@@ -182,6 +189,14 @@ module.exports = {
                 return "BUDGET_NOT_FOUND";
             }
 
+            if (!hasExactlyOneSelectedType(itemBudget)) {
+                return "NO_ITEM_SELECTED";
+            }
+
+            itemBudget.idMaterial = itemBudget.idMaterial || null;
+            itemBudget.idCargo = itemBudget.idCargo || null;
+            itemBudget.idMaquinario = itemBudget.idMaquinario || null;
+
             itemBudget.valorTotal = itemBudget.valorUnitario * itemBudget.quantidade;
 
             const result = await db("ItensOrcamento").insert(itemBudget);
@@ -207,7 +222,15 @@ module.exports = {
                 return "BUDGET_NOT_FOUND";
             }
 
-            if (itemBudget.valorUnitario && itemBudget.quantidade) {
+            if (!hasExactlyOneSelectedType(itemBudget)) {
+                return "NO_ITEM_SELECTED";
+            }
+
+            itemBudget.idMaterial = itemBudget.idMaterial || null;
+            itemBudget.idCargo = itemBudget.idCargo || null;
+            itemBudget.idMaquinario = itemBudget.idMaquinario || null;
+
+            if (typeof itemBudget.valorUnitario === 'number' && typeof itemBudget.quantidade === 'number') {
                 itemBudget.valorTotal = itemBudget.valorUnitario * itemBudget.quantidade;
             }
 

@@ -1,5 +1,26 @@
 const itensOrcamentoModel = require('../model/itensOrcamentoModel');
 
+const toNullableInt = (value) => {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+};
+
+const toNumber = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
+const hasExactlyOneSelectedType = (itemBudget) => {
+    const selectedTypes = [itemBudget.idMaterial, itemBudget.idCargo, itemBudget.idMaquinario]
+        .filter(value => value !== null);
+
+    return selectedTypes.length === 1;
+};
+
 module.exports = {
     async findAll(req, res) {
         try {
@@ -40,13 +61,25 @@ module.exports = {
             const itemsBudgetData = req.body;
 
             const itemBudget = {
-                idProjeto: itemsBudgetData.idProjeto,
-                idMaterial: itemsBudgetData.idMaterial,
-                idCargo: itemsBudgetData.idCargo,
-                idMaquinario: itemsBudgetData.idMaquinario,
-                valorUnitario: itemsBudgetData.valorUnitario,
-                quantidade: itemsBudgetData.quantidade,
-                idOrcamento: itemsBudgetData.idOrcamento,
+                idProjeto: toNullableInt(itemsBudgetData.idProjeto),
+                idMaterial: toNullableInt(itemsBudgetData.idMaterial),
+                idCargo: toNullableInt(itemsBudgetData.idCargo),
+                idMaquinario: toNullableInt(itemsBudgetData.idMaquinario),
+                valorUnitario: toNumber(itemsBudgetData.valorUnitario),
+                quantidade: toNumber(itemsBudgetData.quantidade),
+                idOrcamento: toNullableInt(itemsBudgetData.idOrcamento),
+            };
+
+            if (!itemBudget.idProjeto || !itemBudget.idOrcamento) {
+                return res.status(400).json({ message: "Projeto e orçamento são obrigatórios." });
+            }
+
+            if (!itemBudget.valorUnitario || itemBudget.valorUnitario <= 0 || !itemBudget.quantidade || itemBudget.quantidade <= 0) {
+                return res.status(400).json({ message: "Valor unitário e quantidade devem ser maiores que zero." });
+            }
+
+            if (!hasExactlyOneSelectedType(itemBudget)) {
+                return res.status(400).json({ message: "Selecione exatamente um tipo de item: material, cargo ou maquinário." });
             }
 
             const result = await itensOrcamentoModel.create(itemBudget);
@@ -57,6 +90,10 @@ module.exports = {
 
             if (result === "BUDGET_NOT_FOUND") {
                 return res.status(404).json({ message: "Orçamento não encontrado." });
+            }
+
+            if (result === "NO_ITEM_SELECTED") {
+                return res.status(400).json({ message: "Selecione exatamente um tipo de item: material, cargo ou maquinário." });
             }
 
             if (typeof result === 'object') {
@@ -75,14 +112,30 @@ module.exports = {
             const itemsBudgetData = req.body;
 
             const itemBudget = {
-                id: id,
-                idProjeto: itemsBudgetData.idProjeto,
-                idMaterial: itemsBudgetData.idMaterial,
-                idCargo: itemsBudgetData.idCargo,
-                idMaquinario: itemsBudgetData.idMaquinario,
-                valorUnitario: itemsBudgetData.valorUnitario,
-                quantidade: itemsBudgetData.quantidade,
-                idOrcamento: itemsBudgetData.idOrcamento,
+                id: toNullableInt(id),
+                idProjeto: toNullableInt(itemsBudgetData.idProjeto),
+                idMaterial: toNullableInt(itemsBudgetData.idMaterial),
+                idCargo: toNullableInt(itemsBudgetData.idCargo),
+                idMaquinario: toNullableInt(itemsBudgetData.idMaquinario),
+                valorUnitario: toNumber(itemsBudgetData.valorUnitario),
+                quantidade: toNumber(itemsBudgetData.quantidade),
+                idOrcamento: toNullableInt(itemsBudgetData.idOrcamento),
+            };
+
+            if (!itemBudget.id) {
+                return res.status(400).json({ message: "ID do item inválido." });
+            }
+
+            if (!itemBudget.idProjeto || !itemBudget.idOrcamento) {
+                return res.status(400).json({ message: "Projeto e orçamento são obrigatórios." });
+            }
+
+            if (!itemBudget.valorUnitario || itemBudget.valorUnitario <= 0 || !itemBudget.quantidade || itemBudget.quantidade <= 0) {
+                return res.status(400).json({ message: "Valor unitário e quantidade devem ser maiores que zero." });
+            }
+
+            if (!hasExactlyOneSelectedType(itemBudget)) {
+                return res.status(400).json({ message: "Selecione exatamente um tipo de item: material, cargo ou maquinário." });
             }
 
             const result = await itensOrcamentoModel.update(itemBudget);
@@ -93,6 +146,10 @@ module.exports = {
 
             if (result === "BUDGET_NOT_FOUND") {
                 return res.status(404).json({ message: "Orçamento não encontrado." });
+            }
+
+            if (result === "NO_ITEM_SELECTED") {
+                return res.status(400).json({ message: "Selecione exatamente um tipo de item: material, cargo ou maquinário." });
             }
 
             if (result === 0) {

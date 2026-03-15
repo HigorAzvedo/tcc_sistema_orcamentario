@@ -62,21 +62,20 @@ module.exports = {
 
     async getProjetosByOrcamentoId(orcamentoId) {
         try {
-            const orcamentoExists = await db('Orcamentos').where({ id: orcamentoId }).first();
-            if (!orcamentoExists) {
+            const orcamento = await db('Orcamentos')
+                .join('Projetos', 'Orcamentos.projetoId', '=', 'Projetos.id')
+                .where('Orcamentos.id', orcamentoId)
+                .select('Projetos.id', 'Projetos.nome')
+                .first();
+            
+            if (!orcamento) {
                 return "ORCAMENTO_NOT_FOUND";
             }
 
-            const projetos = await db('ItensOrcamento')
-                .join('Projetos', 'ItensOrcamento.idProjeto', '=', 'Projetos.id')
-                .where('ItensOrcamento.idOrcamento', orcamentoId)
-                .distinct('Projetos.id', 'Projetos.nome')
-                .select('Projetos.id', 'Projetos.nome');
-
-            return projetos.map(projeto => ({
-                value: projeto.id,
-                label: projeto.nome
-            }));
+            return [{
+                value: orcamento.id,
+                label: orcamento.nome
+            }];
         } catch (error) {
             console.log(error);
             throw error;

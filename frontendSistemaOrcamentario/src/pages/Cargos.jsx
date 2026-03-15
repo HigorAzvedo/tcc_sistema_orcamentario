@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Table from '../components/Table';
 import Modal from '../components/Modal';
 import Form from '../components/Form';
@@ -14,9 +14,30 @@ const Cargos = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCargo, setEditingCargo] = useState(null);
   const [cargos, setCargos] = useState([]);
+  const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const findAll = async () => {
+  const loadAreas = useCallback(async () => {
+    try {
+      const response = await api.get('/areas');
+      if (!response.data || response.data.length === 0) {
+        setAreas([]);
+        return;
+      }
+
+      setAreas(
+        response.data.map((area) => ({
+          value: area.id,
+          label: area.nome,
+        }))
+      );
+    } catch (error) {
+      console.error('Erro ao buscar áreas:', error);
+      toast.error('Erro ao carregar áreas disponíveis.');
+    }
+  }, []);
+
+  const findAll = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/cargos');
@@ -34,11 +55,16 @@ const Cargos = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const createCargo = async (cargoData) => {
     try {
-      const response = await api.post('/cargos/cargo/', cargoData);
+      const payload = {
+        ...cargoData,
+        areaId: parseInt(cargoData.areaId, 10),
+      };
+
+      const response = await api.post('/cargos/cargo/', payload);
       if (response.status === 201) {
         toast.success('Cargo criado com sucesso!');
         setIsModalOpen(false);
@@ -86,7 +112,13 @@ const Cargos = () => {
         toast.error('Nenhum cargo selecionado para atualização.');
         return;
       }
-      const response = await api.put(`/cargos/cargo/${editingCargo.id}`, cargoData);
+
+      const payload = {
+        ...cargoData,
+        areaId: parseInt(cargoData.areaId, 10),
+      };
+
+      const response = await api.put(`/cargos/cargo/${editingCargo.id}`, payload);
       if (response.status === 200) {
         toast.success('Cargo atualizado com sucesso!');
         setIsEditModalOpen(false);
@@ -102,7 +134,7 @@ const Cargos = () => {
   const cargoFields = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'salario', label: 'Salario', type: 'text', required: true },
-    { name: 'areaId', label: 'Área', type: 'text', required: true },
+    { name: 'areaId', label: 'Área', type: 'select', required: true, options: areas },
 
   ];
 
@@ -124,8 +156,9 @@ const Cargos = () => {
   ];
 
   useEffect(() => {
+    loadAreas();
     findAll();
-  }, []);
+  }, [findAll, loadAreas]);
 
   return (
     <>

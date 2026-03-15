@@ -27,6 +27,36 @@
   margin-bottom: 30px;
 }
 
+.item-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  padding: 10px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #f8f9fa;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-button:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.tab-button.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

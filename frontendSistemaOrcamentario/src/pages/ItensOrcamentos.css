@@ -1,0 +1,101 @@
+.item-orcamento-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.item-orcamento-title {
+  margin: 0;
+  padding-right: 40px;
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.item-orcamento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.item-orcamento-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-orcamento-field-full {
+  grid-column: 1 / -1;
+}
+
+.item-orcamento-field label {
+  color: #444;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.item-orcamento-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d7dde5;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.item-orcamento-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
+
+.item-orcamento-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.item-orcamento-tab {
+  padding: 10px 16px;
+  border: 1px solid #d7dde5;
+  border-radius: 999px;
+  background: #f6f8fb;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.item-orcamento-tab:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.item-orcamento-tab.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+}
+
+.item-orcamento-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.item-orcamento-submit {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .item-orcamento-actions {
+    justify-content: stretch;
+  }
+
+  .item-orcamento-submit {
+    width: 100%;
+  }
+}

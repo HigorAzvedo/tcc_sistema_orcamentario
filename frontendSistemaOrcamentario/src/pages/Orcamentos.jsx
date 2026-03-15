@@ -188,7 +188,7 @@ const Orcamentos = () => {
             <button title='Excluir orçamento' className="btn-excluir" onClick={() => deleteBudget(id)}><FaTrash /></button>
             <Link
               to="/adicionar-itens-orcamentos"
-              state={{ orcamentoId: id, orcamentoNome: row.nome }}
+              state={{ orcamentoId: id, orcamentoNome: row.nome, projetoId: row.projetoId }}
             >
               <button title='Adicionar Itens ao orçamento' className="btn-addItems"><FaCartPlus /></button>
             </Link>

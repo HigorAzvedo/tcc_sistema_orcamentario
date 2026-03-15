@@ -151,7 +151,6 @@
   cursor: pointer;
 }
 
-/* Estilo customizado para checkbox de Alterar Senha */
 .form-group label:has(input.alterar_senha) {
   display: flex;
   align-items: center;
@@ -246,13 +245,12 @@
   font-size: 12px;
 }
 
-/* Integração do PasswordInput com form-group */
 .form-group .password-input-wrapper {
   width: 100%;
   margin: 0;
 }
 
-/* Estilos para formulários dentro de Modais (compatibilidade com Form component) */
+
 .modal-content > h2 {
   color: #333;
   font-size: 24px;
@@ -262,8 +260,8 @@
 }
 
 .modal-content form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* display: grid;
+  grid-template-columns: 1fr 1fr; */
   gap: 20px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 30px;

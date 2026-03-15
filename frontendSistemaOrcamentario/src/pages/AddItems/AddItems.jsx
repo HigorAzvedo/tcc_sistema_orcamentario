@@ -1,15 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import api from '../../service/api';
 import './AddItems.css';
 
+const itemTabs = [
+  { key: 'material', label: 'Material' },
+  { key: 'cargo', label: 'Cargo' },
+  { key: 'maquinario', label: 'Maquinário' }
+];
+
 const AddItems = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const orcamentoId = location.state?.orcamentoId;
   const orcamentoNome = location.state?.orcamentoNome;
+  const projetoIdFromNav = location.state?.projetoId;
 
   const [descricao, setDescricao] = useState('');
   const [unidade, setUnidade] = useState('');
@@ -26,18 +33,9 @@ const AddItems = () => {
   const [materialSelecionado, setMaterialSelecionado] = useState('');
   const [cargoSelecionado, setCargoSelecionado] = useState('');
   const [maquinarioSelecionado, setMaquinarioSelecionado] = useState('');
+  const [activeTab, setActiveTab] = useState('material');
 
-  useEffect(() => {
-    if (!orcamentoId) {
-      toast.error('Orçamento não identificado. Retornando...');
-      navigate('/orcamentos');
-      return;
-    }
-    loadOptions();
-    loadProjetosDoOrcamento(orcamentoId);
-  }, [orcamentoId, navigate]);
-
-  const loadOptions = async () => {
+  const loadOptions = useCallback(async () => {
     try {
       const response = await api.get('/itensOrcamentos/itensOrcamento/options');
       if (response.data) {
@@ -49,9 +47,9 @@ const AddItems = () => {
       console.error('Erro ao carregar opções:', error);
       toast.error('Erro ao carregar opções dos formulários.');
     }
-  };
+  }, []);
 
-  const loadProjetosDoOrcamento = async (orcamentoId) => {
+  const loadProjetosDoOrcamento = useCallback(async (orcamentoId) => {
     try {
       const response = await api.get(`/orcamentos/orcamentos/${orcamentoId}/projetos`);
       if (response.data) {
@@ -59,6 +57,14 @@ const AddItems = () => {
 
         if (response.data.length === 1) {
           setProjetoSelecionado(response.data[0].value.toString());
+        } else if (response.data.length === 0 && projetoIdFromNav) {
+          const projetoResponse = await api.get(`/orcamentos/orcamentos/projetos`);
+          const projetoIdNumero = parseInt(projetoIdFromNav, 10);
+          const projetoEncontrado = (projetoResponse.data || []).find(p => p.value === projetoIdNumero);
+          if (projetoEncontrado) {
+            setProjetos([projetoEncontrado]);
+            setProjetoSelecionado(projetoEncontrado.value.toString());
+          }
         }
       }
     } catch (error) {
@@ -66,6 +72,24 @@ const AddItems = () => {
       toast.error('Erro ao carregar projetos do orçamento.');
       setProjetos([]);
     }
+  }, [projetoIdFromNav]);
+
+  useEffect(() => {
+    if (!orcamentoId) {
+      toast.error('Orçamento não identificado. Retornando...');
+      navigate('/orcamentos');
+      return;
+    }
+
+    loadOptions();
+    loadProjetosDoOrcamento(orcamentoId);
+  }, [loadOptions, loadProjetosDoOrcamento, navigate, orcamentoId]);
+
+  const handleTabChange = (tabKey) => {
+    setActiveTab(tabKey);
+    setMaterialSelecionado('');
+    setCargoSelecionado('');
+    setMaquinarioSelecionado('');
   };
 
   const adicionarItem = () => {
@@ -73,10 +97,44 @@ const AddItems = () => {
       toast.warning('Selecione um projeto!');
       return;
     }
-    if (!materialSelecionado) {
-      toast.warning('Selecione um material!');
-      return;
+
+    let itemId = null;
+    let itemNome = '';
+    let tipoItemLabel = '';
+
+    if (activeTab === 'material') {
+      if (!materialSelecionado) {
+        toast.warning('Selecione um material!');
+        return;
+      }
+      const materialEncontrado = materiais.find(m => m.value === parseInt(materialSelecionado, 10));
+      itemId = parseInt(materialSelecionado, 10);
+      itemNome = materialEncontrado?.label || '';
+      tipoItemLabel = 'Material';
     }
+
+    if (activeTab === 'cargo') {
+      if (!cargoSelecionado) {
+        toast.warning('Selecione um cargo!');
+        return;
+      }
+      const cargoEncontrado = cargos.find(c => c.value === parseInt(cargoSelecionado, 10));
+      itemId = parseInt(cargoSelecionado, 10);
+      itemNome = cargoEncontrado?.label || '';
+      tipoItemLabel = 'Cargo';
+    }
+
+    if (activeTab === 'maquinario') {
+      if (!maquinarioSelecionado) {
+        toast.warning('Selecione um maquinário!');
+        return;
+      }
+      const maquinarioEncontrado = maquinarios.find(m => m.value === parseInt(maquinarioSelecionado, 10));
+      itemId = parseInt(maquinarioSelecionado, 10);
+      itemNome = maquinarioEncontrado?.label || '';
+      tipoItemLabel = 'Maquinário';
+    }
+
     if (!quantidade || parseFloat(quantidade) <= 0) {
       toast.warning('Quantidade deve ser maior que zero!');
       return;
@@ -85,12 +143,6 @@ const AddItems = () => {
       toast.warning('Valor unitário deve ser maior que zero!');
       return;
     }
-
-    const materialEncontrado = materiais.find(m => m.value === parseInt(materialSelecionado));
-    const cargoEncontrado = cargos.find(c => c.value === parseInt(cargoSelecionado));
-    const maquinarioEncontrado = maquinarioSelecionado
-      ? maquinarios.find(m => m.value === parseInt(maquinarioSelecionado))
-      : null;
 
     const valorTotal = parseFloat(quantidade) * parseFloat(valorUnitario);
 
@@ -101,14 +153,14 @@ const AddItems = () => {
       quantidade: parseFloat(quantidade),
       valorUnitario: parseFloat(valorUnitario),
       valorTotal,
-      idProjeto: parseInt(projetoSelecionado),
-      idOrcamento: orcamentoId,
-      idMaterial: parseInt(materialSelecionado),
-      idCargo: parseInt(cargoSelecionado),
-      idMaquinario: maquinarioSelecionado ? parseInt(maquinarioSelecionado) : null,
-      materialNome: materialEncontrado?.label || '',
-      cargoNome: cargoEncontrado?.label || '',
-      maquinarioNome: maquinarioEncontrado?.label || 'N/A'
+      tipoItem: activeTab,
+      tipoItemLabel,
+      itemNome,
+      idProjeto: parseInt(projetoSelecionado, 10),
+      idOrcamento: parseInt(orcamentoId, 10),
+      idMaterial: activeTab === 'material' ? itemId : null,
+      idCargo: activeTab === 'cargo' ? itemId : null,
+      idMaquinario: activeTab === 'maquinario' ? itemId : null
     };
 
     setItensAdicionados([...itensAdicionados, novoItem]);
@@ -190,48 +242,67 @@ const AddItems = () => {
           </div>
         </div>
 
+        <div className="item-tabs">
+          {itemTabs.map(tab => (
+            <button
+              key={tab.key}
+              type="button"
+              className={`tab-button ${activeTab === tab.key ? 'active' : ''}`}
+              onClick={() => handleTabChange(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="form-row">
-          <div className="form-group">
-            <label>Material</label>
-            <select
-              value={materialSelecionado}
-              onChange={(e) => setMaterialSelecionado(e.target.value)}
-              className="form-input"
-            >
-              <option value="">Selecione um material</option>
-              {materiais.map(material => (
-                <option key={material.value} value={material.value}>{material.label}</option>
-              ))}
-            </select>
-          </div>
+          {activeTab === 'material' && (
+            <div className="form-group full-width">
+              <label>Material</label>
+              <select
+                value={materialSelecionado}
+                onChange={(e) => setMaterialSelecionado(e.target.value)}
+                className="form-input"
+              >
+                <option value="">Selecione um material</option>
+                {materiais.map(material => (
+                  <option key={material.value} value={material.value}>{material.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div className="form-group">
-            <label>Cargo (Opcional)</label>
-            <select
-              value={cargoSelecionado}
-              onChange={(e) => setCargoSelecionado(e.target.value)}
-              className="form-input"
-            >
-              <option value="">Selecione um cargo</option>
-              {cargos.map(cargo => (
-                <option key={cargo.value} value={cargo.value}>{cargo.label}</option>
-              ))}
-            </select>
-          </div>
+          {activeTab === 'cargo' && (
+            <div className="form-group full-width">
+              <label>Cargo</label>
+              <select
+                value={cargoSelecionado}
+                onChange={(e) => setCargoSelecionado(e.target.value)}
+                className="form-input"
+              >
+                <option value="">Selecione um cargo</option>
+                {cargos.map(cargo => (
+                  <option key={cargo.value} value={cargo.value}>{cargo.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div className="form-group">
-            <label>Maquinário (Opcional)</label>
-            <select
-              value={maquinarioSelecionado}
-              onChange={(e) => setMaquinarioSelecionado(e.target.value)}
-              className="form-input"
-            >
-              <option value="">Nenhum</option>
-              {maquinarios.map(maquinario => (
-                <option key={maquinario.value} value={maquinario.value}>{maquinario.label}</option>
-              ))}
-            </select>
-          </div>
+          {activeTab === 'maquinario' && (
+            <div className="form-group full-width">
+              <label>Maquinário</label>
+              <select
+                value={maquinarioSelecionado}
+                onChange={(e) => setMaquinarioSelecionado(e.target.value)}
+                className="form-input"
+              >
+                <option value="">Selecione um maquinário</option>
+                {maquinarios.map(maquinario => (
+                  <option key={maquinario.value} value={maquinario.value}>{maquinario.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="form-row">
@@ -296,10 +367,9 @@ const AddItems = () => {
         <table className="tabela-itens">
           <thead>
             <tr>
-              <th>Material</th>
+              <th>Tipo</th>
+              <th>Item</th>
               <th>Descrição</th>
-              <th>Cargo</th>
-              <th>Maquinário</th>
               <th>Qtd.</th>
               <th>Valor Unit.</th>
               <th>Valor Total</th>
@@ -309,15 +379,14 @@ const AddItems = () => {
           <tbody>
             {itensAdicionados.length === 0 ? (
               <tr>
-                <td colSpan="8" className="texto-vazio">Nenhum item adicionado ainda.</td>
+                <td colSpan="7" className="texto-vazio">Nenhum item adicionado ainda.</td>
               </tr>
             ) : (
               itensAdicionados.map(item => (
                 <tr key={item.id}>
-                  <td>{item.materialNome}</td>
+                  <td>{item.tipoItemLabel}</td>
+                  <td>{item.itemNome || 'N/A'}</td>
                   <td>{item.descricao.length > 0 ? item.descricao : 'N/A'}</td>
-                  <td>{item.cargoNome}</td>
-                  <td>{item.maquinarioNome}</td>
                   <td>{item.quantidade.toFixed(2)}</td>
                   <td>R$ {item.valorUnitario.toFixed(2)}</td>
                   <td>R$ {item.valorTotal.toFixed(2)}</td>
