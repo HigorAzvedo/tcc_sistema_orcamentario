@@ -64,12 +64,63 @@
 }
 
 .btn-export {
-  background-color: #6f42c1;
-  color: white;
+  color: #6f42c1;
+  background-color: transparent;
 }
 
-.btn-export:hover {
-  background-color: #59359b;
+.container-acoes .btn-detalhes,
+.container-acoes .btn-excluir,
+.container-acoes .btn-addItems,
+.container-acoes .btn-showItems,
+.container-acoes .btn-success,
+.container-acoes .btn-export {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 16px;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.container-acoes .btn-detalhes {
+  color: #2563eb;
+}
+
+.container-acoes .btn-excluir {
+  color: #dc2626;
+}
+
+.container-acoes .btn-addItems,
+.container-acoes .btn-success {
+  color: #15803d;
+}
+
+.container-acoes .btn-showItems {
+  color: #b45309;
+}
+
+.container-acoes .btn-export {
+  color: #7c3aed;
+}
+
+.container-acoes .btn-detalhes:hover,
+.container-acoes .btn-excluir:hover,
+.container-acoes .btn-addItems:hover,
+.container-acoes .btn-showItems:hover,
+.container-acoes .btn-success:hover,
+.container-acoes .btn-export:hover {
+  background-color: #f1f5f9;
+  transform: translateY(-1px);
+}
+
+.container-acoes .btn-detalhes:focus-visible,
+.container-acoes .btn-excluir:focus-visible,
+.container-acoes .btn-addItems:focus-visible,
+.container-acoes .btn-showItems:focus-visible,
+.container-acoes .btn-success:focus-visible,
+.container-acoes .btn-export:focus-visible {
+  outline: 2px solid #94a3b8;
+  outline-offset: 2px;
 }
 
 .export-menu-wrapper {

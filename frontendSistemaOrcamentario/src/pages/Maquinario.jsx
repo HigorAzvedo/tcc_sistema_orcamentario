@@ -8,6 +8,7 @@ import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const Maquinario = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +16,7 @@ const Maquinario = () => {
   const [editingMachine, setEditingMachine] = useState(null);
   const [maquinarios, setMaquinarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   const findAll = async () => {
     setLoading(true);
@@ -54,17 +56,23 @@ const Maquinario = () => {
   };
 
   const deleteMachine = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este maquinário?')) {
-      try {
-        const response = await api.delete(`/maquinarios/maquinario/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Maquinário deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar maquinário:', error);
-        toast.error('Erro ao deletar maquinário.');
+    const confirmed = await confirmAction({
+      title: 'Excluir maquinário',
+      message: 'Tem certeza que deseja excluir este maquinário?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/maquinarios/maquinario/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Maquinário deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar maquinário:', error);
+      toast.error('Erro ao deletar maquinário.');
     }
   };
 
@@ -154,6 +162,8 @@ const Maquinario = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     </>
   );
 };

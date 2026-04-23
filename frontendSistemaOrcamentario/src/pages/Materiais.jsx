@@ -8,6 +8,7 @@ import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const Materiais = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +16,7 @@ const Materiais = () => {
   const [editingMaterial, setEditingMaterial] = useState(null);
   const [materiais, setMateriais] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   const [areas, setAreas] = useState([]);
 
@@ -65,17 +67,23 @@ const Materiais = () => {
   };
 
   const deleteMaterial = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este material?')) {
-      try {
-        const response = await api.delete(`/materiais/material/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Material deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar material:', error);
-        toast.error('Erro ao deletar material.');
+    const confirmed = await confirmAction({
+      title: 'Excluir material',
+      message: 'Tem certeza que deseja excluir este material?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/materiais/material/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Material deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar material:', error);
+      toast.error('Erro ao deletar material.');
     }
   };
 
@@ -172,6 +180,8 @@ const Materiais = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     </>
   );
 };

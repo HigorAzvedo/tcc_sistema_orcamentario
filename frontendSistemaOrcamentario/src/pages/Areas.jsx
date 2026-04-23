@@ -8,6 +8,7 @@ import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 
 
@@ -17,6 +18,7 @@ const Areas = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingArea, setEditingArea] = useState(null);
+  const { confirmAction, confirmDialog } = useConfirmAction();
   
 
   const findAll = async () => {
@@ -39,18 +41,24 @@ const Areas = () => {
   };
 
   const deleteArea = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta área?')) {
-      try {
-        const response = await api.delete(`/areas/area/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Área deletada com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar área:', error);
-        toast.error('Erro ao deletar área.');
+    const confirmed = await confirmAction({
+      title: 'Excluir área',
+      message: 'Tem certeza que deseja excluir esta área?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/areas/area/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Área deletada com sucesso!');
+        findAll();
       }
-    }  
+    } catch (error) {
+      console.error('Erro ao deletar área:', error);
+      toast.error('Erro ao deletar área.');
+    }
   };
 
   const createArea = async (areaData) => {
@@ -143,6 +151,8 @@ const Areas = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     
     </>
      

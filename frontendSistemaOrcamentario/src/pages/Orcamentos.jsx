@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import { formatDate, formatDateForInput } from '../utils/formatters';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const Orcamentos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,6 +21,7 @@ const Orcamentos = () => {
   const [projetos, setProjetos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openExportMenuId, setOpenExportMenuId] = useState(null);
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
 
   const { user } = useContext(AuthContext);
@@ -75,17 +77,23 @@ const Orcamentos = () => {
   };
 
   const deleteBudget = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este orçamento?')) {
-      try {
-        const response = await api.delete(`/orcamentos/orcamento/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Orçamento deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar orçamento:', error);
-        toast.error('Erro ao deletar orçamento.');
+    const confirmed = await confirmAction({
+      title: 'Excluir orçamento',
+      message: 'Tem certeza que deseja excluir este orçamento?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/orcamentos/orcamento/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Orçamento deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar orçamento:', error);
+      toast.error('Erro ao deletar orçamento.');
     }
   };
 
@@ -295,6 +303,8 @@ const Orcamentos = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     </>
   );
 };

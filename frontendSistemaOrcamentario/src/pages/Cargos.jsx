@@ -8,6 +8,7 @@ import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const Cargos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,6 +17,7 @@ const Cargos = () => {
   const [cargos, setCargos] = useState([]);
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   const loadAreas = useCallback(async () => {
     try {
@@ -77,17 +79,23 @@ const Cargos = () => {
   };
 
   const deleteCargo = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este cargo?')) {
-      try {
-        const response = await api.delete(`/cargos/cargo/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Cargo deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar cargo:', error);
-        toast.error('Erro ao deletar cargo.');
+    const confirmed = await confirmAction({
+      title: 'Excluir cargo',
+      message: 'Tem certeza que deseja excluir este cargo?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/cargos/cargo/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Cargo deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar cargo:', error);
+      toast.error('Erro ao deletar cargo.');
     }
   };
 
@@ -184,6 +192,8 @@ const Cargos = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     </>
   );
 };

@@ -7,6 +7,7 @@ import Modal from '../components/Modal';
 import { FaUserTie, FaBuilding, FaTrash, FaArrowLeft, FaPlus } from 'react-icons/fa';
 import './Pages.css';
 import './OrcamentistaStyles.css';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const OrcamentistaDetalhes = () => {
   const { id } = useParams();
@@ -17,6 +18,7 @@ const OrcamentistaDetalhes = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState('');
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   const loadData = async () => {
     setLoading(true);
@@ -70,15 +72,22 @@ const OrcamentistaDetalhes = () => {
   };
 
   const handleDesvincularCliente = async (clienteId) => {
-    if (window.confirm('Tem certeza que deseja desvincular este cliente?')) {
-      try {
-        await api.delete(`/orcamentistas/desvincular-cliente/${id}/${clienteId}`);
-        toast.success('Cliente desvinculado com sucesso!');
-        loadData();
-      } catch (error) {
-        console.error('Erro ao desvincular cliente:', error);
-        toast.error('Erro ao desvincular cliente.');
-      }
+    const confirmed = await confirmAction({
+      title: 'Desvincular cliente',
+      message: 'Tem certeza que deseja desvincular este cliente?',
+      confirmText: 'Desvincular',
+      confirmVariant: 'primary'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/orcamentistas/desvincular-cliente/${id}/${clienteId}`);
+      toast.success('Cliente desvinculado com sucesso!');
+      loadData();
+    } catch (error) {
+      console.error('Erro ao desvincular cliente:', error);
+      toast.error('Erro ao desvincular cliente.');
     }
   };
 
@@ -202,6 +211,8 @@ const OrcamentistaDetalhes = () => {
           )}
         </div>
       </Modal>
+
+      {confirmDialog}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const Orcamentistas = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Orcamentistas = () => {
     senha: '',
     confirmarSenha: ''
   });
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   const findAll = async () => {
     setLoading(true);
@@ -61,17 +63,23 @@ const Orcamentistas = () => {
   };
 
   const deleteOrcamentista = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este orçamentista?')) {
-      try {
-        const response = await api.delete(`/orcamentistas/orcamentista/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Orçamentista deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar orçamentista:', error);
-        toast.error('Erro ao deletar orçamentista.');
+    const confirmed = await confirmAction({
+      title: 'Excluir orçamentista',
+      message: 'Tem certeza que deseja excluir este orçamentista?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/orcamentistas/orcamentista/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Orçamentista deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar orçamentista:', error);
+      toast.error('Erro ao deletar orçamentista.');
     }
   };
 
@@ -264,6 +272,8 @@ const Orcamentistas = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     
     </>
   )

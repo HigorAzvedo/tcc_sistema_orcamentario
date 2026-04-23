@@ -8,6 +8,7 @@ import './ItensOrcamentos.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const itemTabs = [
   { key: 'material', label: 'Material' },
@@ -295,6 +296,7 @@ const ItensOrcamentos = () => {
   const [editFormData, setEditFormData] = useState(createEmptyFormData());
   const [createActiveTab, setCreateActiveTab] = useState('material');
   const [editActiveTab, setEditActiveTab] = useState('material');
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   const loadOptions = useCallback(async () => {
     try {
@@ -394,17 +396,23 @@ const ItensOrcamentos = () => {
   };
 
   const deleteItem = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este item de orçamento?')) {
-      try {
-        const response = await api.delete(`/itensOrcamentos/itensOrcamento/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Item de orçamento deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar item de orçamento:', error);
-        toast.error('Erro ao deletar item de orçamento.');
+    const confirmed = await confirmAction({
+      title: 'Excluir item',
+      message: 'Tem certeza que deseja excluir este item de orçamento?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/itensOrcamentos/itensOrcamento/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Item de orçamento deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar item de orçamento:', error);
+      toast.error('Erro ao deletar item de orçamento.');
     }
   };
 
@@ -551,6 +559,8 @@ const ItensOrcamentos = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     </>
   );
 };

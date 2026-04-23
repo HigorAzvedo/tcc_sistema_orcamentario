@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 import { FaUserTie, FaBuilding, FaProjectDiagram, FaFileInvoiceDollar, FaPlus, FaTrash } from 'react-icons/fa';
 import './Pages.css';
 import './OrcamentistaStyles.css';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const DashboardOrcamentista = () => {
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,7 @@ const DashboardOrcamentista = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [todosClientes, setTodosClientes] = useState([]);
   const [selectedClienteId, setSelectedClienteId] = useState('');
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   useEffect(() => {
     loadDashboardData();
@@ -76,16 +78,23 @@ const DashboardOrcamentista = () => {
   };
 
   const handleDesvincularCliente = async (clienteId) => {
-    if (window.confirm('Tem certeza que deseja se desvincular deste cliente?')) {
-      try {
-        await api.delete(`/orcamentistas/auto-desvincular-cliente/${clienteId}`);
-        toast.success('Desvinculado do cliente com sucesso!');
-        loadDashboardData();
-        loadTodosClientes();
-      } catch (error) {
-        console.error('Erro ao desvincular:', error);
-        toast.error('Erro ao desvincular do cliente.');
-      }
+    const confirmed = await confirmAction({
+      title: 'Desvincular cliente',
+      message: 'Tem certeza que deseja se desvincular deste cliente?',
+      confirmText: 'Desvincular',
+      confirmVariant: 'primary'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/orcamentistas/auto-desvincular-cliente/${clienteId}`);
+      toast.success('Desvinculado do cliente com sucesso!');
+      loadDashboardData();
+      loadTodosClientes();
+    } catch (error) {
+      console.error('Erro ao desvincular:', error);
+      toast.error('Erro ao desvincular do cliente.');
     }
   };
 
@@ -339,6 +348,8 @@ const DashboardOrcamentista = () => {
           )}
         </div>
       </Modal>
+
+      {confirmDialog}
     </div>
   );
 };

@@ -9,6 +9,7 @@ import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
 import { toast } from 'react-toastify';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 
 const Clientes = () => {
@@ -24,6 +25,7 @@ const Clientes = () => {
     email: '',
     senha: ''
   });
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
   const findAll = async () => {
     setLoading(true);
@@ -58,17 +60,23 @@ const Clientes = () => {
   };
 
   const deleteClient = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
-      try {
-        const response = await api.delete(`/clientes/cliente/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Cliente deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar cliente:', error);
-        toast.error('Erro ao deletar cliente.');
+    const confirmed = await confirmAction({
+      title: 'Excluir cliente',
+      message: 'Tem certeza que deseja excluir este cliente?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/clientes/cliente/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Cliente deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar cliente:', error);
+      toast.error('Erro ao deletar cliente.');
     }
   };
 
@@ -286,6 +294,8 @@ const Clientes = () => {
           </form>
         </Modal>
       )}
+
+      {confirmDialog}
     </>
   );
 };

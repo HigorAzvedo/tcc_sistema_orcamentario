@@ -10,6 +10,7 @@ import api from '../service/api';
 import { toast } from 'react-toastify';
 import { formatDate, formatDateForInput } from '../utils/formatters';
 import { AuthContext } from '../context/AuthContext';
+import useConfirmAction from '../hooks/useConfirmAction';
 
 const Projetos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,6 +19,7 @@ const Projetos = () => {
   const [projetos, setProjetos] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { confirmAction, confirmDialog } = useConfirmAction();
 
 
   const { user } = useContext(AuthContext);
@@ -72,17 +74,23 @@ const Projetos = () => {
   };
 
   const deleteProject = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
-      try {
-        const response = await api.delete(`/projetos/projeto/${id}`);
-        if (response.status === 204 || response.status === 200) {
-          toast.success('Projeto deletado com sucesso!');
-          findAll();
-        }
-      } catch (error) {
-        console.error('Erro ao deletar projeto:', error);
-        toast.error('Erro ao deletar projeto.');
+    const confirmed = await confirmAction({
+      title: 'Excluir projeto',
+      message: 'Tem certeza que deseja excluir este projeto?',
+      confirmText: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete(`/projetos/projeto/${id}`);
+      if (response.status === 204 || response.status === 200) {
+        toast.success('Projeto deletado com sucesso!');
+        findAll();
       }
+    } catch (error) {
+      console.error('Erro ao deletar projeto:', error);
+      toast.error('Erro ao deletar projeto.');
     }
   };
 
@@ -192,6 +200,8 @@ const Projetos = () => {
           />
         </Modal>
       )}
+
+      {confirmDialog}
     </>
   );
 };
