@@ -49,7 +49,7 @@ const mapItemToFormData = (item) => ({
   idCargo: item?.idCargo ? String(item.idCargo) : '',
   idMaquinario: item?.idMaquinario ? String(item.idMaquinario) : '',
   valorUnitario: item?.valorUnitario ? String(item.valorUnitario) : '',
-  quantidade: item?.quantidade ? String(item.quantidade) : ''
+  quantidade: item?.quantidade ? String(parseInt(item.quantidade, 10)) : ''
 });
 
 const getSelectedTypeDetails = (row) => {
@@ -98,8 +98,13 @@ const validateItemForm = (formData, activeTab) => {
     return 'Selecione um maquinário.';
   }
 
-  if (!formData.quantidade || Number(formData.quantidade) <= 0) {
+  const quantidadeNumber = Number(formData.quantidade);
+  if (!formData.quantidade || quantidadeNumber <= 0) {
     return 'Quantidade deve ser maior que zero.';
+  }
+
+  if (!Number.isInteger(quantidadeNumber)) {
+    return 'Quantidade deve ser um número inteiro.';
   }
 
   if (!formData.valorUnitario || Number(formData.valorUnitario) <= 0) {
@@ -111,7 +116,7 @@ const validateItemForm = (formData, activeTab) => {
 
 const buildItemPayload = (formData, activeTab) => ({
   valorUnitario: parseFloat(formData.valorUnitario),
-  quantidade: parseFloat(formData.quantidade),
+  quantidade: parseInt(formData.quantidade, 10),
   idProjeto: parseInt(formData.idProjeto, 10),
   idOrcamento: parseInt(formData.idOrcamento, 10),
   idMaterial: activeTab === 'material' && formData.idMaterial ? parseInt(formData.idMaterial, 10) : null,
@@ -129,6 +134,7 @@ const ItemBudgetForm = ({
   onTabChange,
   onSubmit,
   submitButtonText,
+  showTypeTabs = true,
   projetos,
   orcamentos,
   materiais,
@@ -172,18 +178,20 @@ const ItemBudgetForm = ({
       </div>
     </div>
 
-    <div className="item-orcamento-tabs">
-      {itemTabs.map((tab) => (
-        <button
-          key={tab.key}
-          type="button"
-          className={`item-orcamento-tab ${activeTab === tab.key ? 'active' : ''}`}
-          onClick={() => onTabChange(tab.key)}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
+    {showTypeTabs && (
+      <div className="item-orcamento-tabs">
+        {itemTabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            className={`item-orcamento-tab ${activeTab === tab.key ? 'active' : ''}`}
+            onClick={() => onTabChange(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    )}
 
     <div className="item-orcamento-grid">
       {activeTab === 'material' && (
@@ -251,8 +259,8 @@ const ItemBudgetForm = ({
           value={formData.quantidade}
           onChange={onFieldChange}
           className="item-orcamento-input"
-          step="0.01"
-          min="0"
+          step="1"
+          min="1"
           placeholder="0"
         />
       </div>
@@ -548,9 +556,9 @@ const ItensOrcamentos = () => {
             formData={editFormData}
             activeTab={editActiveTab}
             onFieldChange={handleFieldChange(setEditFormData)}
-            onTabChange={handleTabChange(setEditFormData, setEditActiveTab)}
             onSubmit={updateItem}
             submitButtonText="Atualizar"
+            showTypeTabs={false}
             projetos={projetos}
             orcamentos={orcamentos}
             materiais={materiais}

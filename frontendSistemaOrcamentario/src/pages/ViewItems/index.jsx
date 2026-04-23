@@ -67,6 +67,54 @@ function ViewItems() {
         return 'Item não identificado';
     };
 
+    const validateItemForm = (formData, itemType) => {
+        if (!formData.idProjeto) {
+            return 'Selecione um projeto.';
+        }
+
+        if (!formData.idOrcamento) {
+            return 'Selecione um orçamento.';
+        }
+
+        if (itemType === 'material' && !formData.idMaterial) {
+            return 'Selecione um material.';
+        }
+
+        if (itemType === 'cargo' && !formData.idCargo) {
+            return 'Selecione um cargo.';
+        }
+
+        if (itemType === 'maquinario' && !formData.idMaquinario) {
+            return 'Selecione um maquinário.';
+        }
+
+        const quantidadeNumber = Number(formData.quantidade);
+        if (!formData.quantidade || quantidadeNumber <= 0) {
+            return 'Quantidade deve ser maior que zero.';
+        }
+
+        if (!Number.isInteger(quantidadeNumber)) {
+            return 'Quantidade deve ser um número inteiro.';
+        }
+
+        if (!formData.valorUnitario || Number(formData.valorUnitario) <= 0) {
+            return 'Valor unitário deve ser maior que zero.';
+        }
+
+        return null;
+    };
+
+    const buildItemPayload = (formData, itemType) => ({
+        quantidade: parseInt(formData.quantidade, 10),
+        valorUnitario: parseFloat(formData.valorUnitario),
+        valorTotal: parseFloat(formData.valorUnitario) * parseInt(formData.quantidade, 10),
+        idProjeto: parseInt(formData.idProjeto, 10),
+        idOrcamento: parseInt(formData.idOrcamento, 10),
+        idMaterial: itemType === 'material' && formData.idMaterial ? parseInt(formData.idMaterial, 10) : null,
+        idCargo: itemType === 'cargo' && formData.idCargo ? parseInt(formData.idCargo, 10) : null,
+        idMaquinario: itemType === 'maquinario' && formData.idMaquinario ? parseInt(formData.idMaquinario, 10) : null
+    });
+
     const typeSectionMeta = {
         material: {
             title: 'Materiais',
@@ -120,48 +168,63 @@ function ViewItems() {
         setLoading(false);
     };
 
-    const itemFields = [
-        {
-            name: 'idProjeto',
-            label: 'Projeto',
-            type: 'select',
-            required: true,
-            options: projetos
-        },
-        {
-            name: 'idOrcamento',
-            label: 'Orçamento',
-            type: 'select',
-            required: true,
-            options: orcamentos
-        },
-        {
-            name: 'idMaterial',
-            label: 'Material',
-            type: 'select',
-            required: true,
-            options: materiais
-        },
-        {
-            name: 'idCargo',
-            label: 'Cargo',
-            type: 'select',
-            required: true,
-            options: cargos
-        },
-        {
-            name: 'idMaquinario',
-            label: 'Maquinário',
-            type: 'select',
-            required: false,
-            options: [
-                { value: '', label: 'Nenhum' },
-                ...maquinarios
-            ]
-        },
-        { name: 'valorUnitario', label: 'Valor Unitário', type: 'number', required: true, step: '0.01' },
-        { name: 'quantidade', label: 'Quantidade', type: 'number', required: true, step: '0.01' }
-    ];
+    const itemFields = useMemo(() => {
+        const itemType = resolveItemType(editingItem || {});
+
+        const baseFields = [
+            {
+                name: 'idProjeto',
+                label: 'Projeto',
+                type: 'select',
+                required: true,
+                options: projetos
+            },
+            {
+                name: 'idOrcamento',
+                label: 'Orçamento',
+                type: 'select',
+                required: true,
+                options: orcamentos
+            }
+        ];
+
+        if (itemType === 'material') {
+            baseFields.push({
+                name: 'idMaterial',
+                label: 'Material',
+                type: 'select',
+                required: true,
+                options: materiais
+            });
+        }
+
+        if (itemType === 'cargo') {
+            baseFields.push({
+                name: 'idCargo',
+                label: 'Cargo',
+                type: 'select',
+                required: true,
+                options: cargos
+            });
+        }
+
+        if (itemType === 'maquinario') {
+            baseFields.push({
+                name: 'idMaquinario',
+                label: 'Maquinário',
+                type: 'select',
+                required: true,
+                options: maquinarios
+            });
+        }
+
+        baseFields.push(
+            { name: 'valorUnitario', label: 'Valor Unitário', type: 'number', required: true, step: '0.01' },
+            { name: 'quantidade', label: 'Quantidade', type: 'number', required: true, step: '1', min: '1' }
+        );
+
+        return baseFields;
+    }, [editingItem, projetos, orcamentos, materiais, cargos, maquinarios]);
 
     const loadItensDoOrcamento = async (orcamentoId) => {
         setLoading(true);
@@ -205,7 +268,10 @@ function ViewItems() {
             const url = `/itensOrcamentos/itensOrcamento/${id}`;
             const response = await api.get(url);
             if (response.data) {
-                setEditingItem(response.data);
+                setEditingItem({
+                    ...response.data,
+                    quantidade: response.data.quantidade ? parseInt(response.data.quantidade, 10) : ''
+                });
                 setIsEditModalOpen(true);
             } else {
                 toast.error('Item de orçamento não encontrado.');
@@ -217,17 +283,19 @@ function ViewItems() {
     };
 
     const updateItem = async (itemData) => {
+        const itemType = resolveItemType(editingItem || {});
+        const validationError = validateItemForm(itemData, itemType);
+
+        if (validationError) {
+            toast.warning(validationError);
+            return;
+        }
+
         try {
-            const response = await api.put(`/itensOrcamentos/itensOrcamento/${editingItem.id}`, {
-                valorUnitario: parseFloat(itemData.valorUnitario),
-                quantidade: parseFloat(itemData.quantidade),
-                valorTotal: parseFloat(itemData.valorUnitario) * parseFloat(itemData.quantidade),
-                idProjeto: parseInt(itemData.idProjeto),
-                idOrcamento: parseInt(itemData.idOrcamento),
-                idMaterial: parseInt(itemData.idMaterial),
-                idCargo: parseInt(itemData.idCargo),
-                idMaquinario: itemData.idMaquinario ? parseInt(itemData.idMaquinario) : null
-            });
+            const response = await api.put(
+                `/itensOrcamentos/itensOrcamento/${editingItem.id}`,
+                buildItemPayload(itemData, itemType)
+            );
             if (response.status === 200) {
                 toast.success('Item de orçamento atualizado com sucesso!');
                 setIsEditModalOpen(false);
