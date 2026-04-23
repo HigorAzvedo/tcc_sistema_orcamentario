@@ -7,6 +7,8 @@ router.get('/', verifyLocalToken, attachClienteId, orcamentoController.findAll);
 router.get('/orcamentos/projetos', verifyLocalToken, orcamentoController.getAllProjetos);
 router.get('/orcamentos/:id/projetos', verifyLocalToken, orcamentoController.getProjetosByOrcamentoId);
 router.get('/orcamento/:id', verifyLocalToken, attachClienteId, orcamentoController.findById);
+router.get('/orcamento/:id/export/pdf', verifyLocalToken, attachClienteId, orcamentoController.exportPdf);
+router.get('/orcamento/:id/export/excel', verifyLocalToken, attachClienteId, orcamentoController.exportExcel);
 
 router.post('/orcamento', verifyLocalToken, isAdminOrManager, orcamentoController.create);
 router.put('/orcamento/:id', verifyLocalToken, isAdminOrManager, orcamentoController.update);

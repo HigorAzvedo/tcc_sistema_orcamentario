@@ -2,6 +2,78 @@ const db = require('../src/database/connection.js');
 
 module.exports = {
 
+    async findExportDataById(orcamentoId) {
+        try {
+            const orcamento = await db('Orcamentos')
+                .join('Projetos', 'Orcamentos.projetoId', '=', 'Projetos.id')
+                .join('Cliente', 'Projetos.clienteId', '=', 'Cliente.id')
+                .where('Orcamentos.id', orcamentoId)
+                .select(
+                    'Orcamentos.id',
+                    'Orcamentos.nome',
+                    'Orcamentos.dataCriacao',
+                    'Orcamentos.status',
+                    'Orcamentos.valorTotalItens',
+                    'Orcamentos.projetoId',
+                    'Projetos.nome as projetoNome',
+                    'Projetos.clienteId',
+                    'Cliente.nome as clienteNome'
+                )
+                .first();
+
+            if (!orcamento) {
+                return -1;
+            }
+
+            const itens = await db('ItensOrcamento')
+                .leftJoin('Materiais', 'ItensOrcamento.idMaterial', '=', 'Materiais.id')
+                .leftJoin('Cargos', 'ItensOrcamento.idCargo', '=', 'Cargos.id')
+                .leftJoin('Maquinarios', 'ItensOrcamento.idMaquinario', '=', 'Maquinarios.id')
+                .where('ItensOrcamento.idOrcamento', orcamentoId)
+                .select(
+                    'ItensOrcamento.id',
+                    'ItensOrcamento.valorUnitario',
+                    'ItensOrcamento.quantidade',
+                    'ItensOrcamento.valorTotal',
+                    'ItensOrcamento.idMaterial',
+                    'ItensOrcamento.idCargo',
+                    'ItensOrcamento.idMaquinario',
+                    'Materiais.nome as materialNome',
+                    'Cargos.nome as cargoNome',
+                    'Maquinarios.nome as maquinarioNome'
+                );
+
+            const itensFormatados = itens.map((item) => {
+                const tipo = item.idMaterial
+                    ? 'Material'
+                    : item.idCargo
+                        ? 'Cargo'
+                        : 'Maquinário';
+
+                const descricao = item.materialNome || item.cargoNome || item.maquinarioNome || 'Não identificado';
+
+                return {
+                    tipo,
+                    descricao,
+                    quantidade: Number(item.quantidade) || 0,
+                    valorUnitario: Number(item.valorUnitario) || 0,
+                    valorTotal: Number(item.valorTotal) || 0
+                };
+            });
+
+            return {
+                orcamento: {
+                    ...orcamento,
+                    valorTotalItens: Number(orcamento.valorTotalItens) || 0
+                },
+                itens: itensFormatados
+            };
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    },
+
     async findAll() {
         try {
             const orcamentos = await db('Orcamentos')

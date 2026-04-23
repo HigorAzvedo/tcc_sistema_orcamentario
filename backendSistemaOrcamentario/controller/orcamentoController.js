@@ -1,5 +1,34 @@
 const orcamentoModel = require('../model/orcamentoModel');
 const db = require('../src/database/connection.js');
+const PDFDocument = require('pdfkit');
+const XLSX = require('xlsx');
+
+const formatCurrency = (value) => {
+    const numeric = Number(value) || 0;
+    return numeric.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const formatDate = (date) => {
+    if (!date) return '-';
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        return '-';
+    }
+
+    return parsedDate.toLocaleDateString('pt-BR');
+};
+
+const sanitizeFileName = (value) => {
+    return String(value || 'orcamento')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9-_]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+};
 
 module.exports = {
 
@@ -137,6 +166,139 @@ module.exports = {
         } catch (error) {
             console.log(error);
             return res.status(500).json({ error: "Erro ao buscar projetos do orçamento" });
+        }
+    },
+
+    async exportPdf(req, res) {
+        try {
+            const { id } = req.params;
+            const exportData = await orcamentoModel.findExportDataById(id);
+
+            if (exportData === -1) {
+                return res.status(404).json({ message: 'Orçamento não encontrado.' });
+            }
+
+            if (req.clienteId && exportData.orcamento.clienteId !== req.clienteId) {
+                return res.status(403).json({ message: 'Acesso negado a este orçamento.' });
+            }
+
+            const safeName = sanitizeFileName(exportData.orcamento.nome);
+
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="orcamento-${safeName || id}.pdf"`);
+
+            const doc = new PDFDocument({ margin: 40, size: 'A4' });
+            doc.pipe(res);
+
+            doc.fontSize(18).text('Orçamento', { align: 'left' });
+            doc.moveDown(0.6);
+
+            doc.fontSize(11);
+            doc.text(`Nome: ${exportData.orcamento.nome}`);
+            doc.text(`Projeto: ${exportData.orcamento.projetoNome}`);
+            doc.text(`Cliente: ${exportData.orcamento.clienteNome}`);
+            doc.text(`Data de Criação: ${formatDate(exportData.orcamento.dataCriacao)}`);
+            doc.text(`Status: ${exportData.orcamento.status}`);
+            doc.text(`Valor Total: ${formatCurrency(exportData.orcamento.valorTotalItens)}`);
+            doc.moveDown();
+
+            doc.fontSize(13).text('Itens do Orçamento');
+            doc.moveDown(0.4);
+
+            if (!exportData.itens.length) {
+                doc.fontSize(11).text('Este orçamento não possui itens cadastrados.');
+                doc.end();
+                return;
+            }
+
+            doc.fontSize(10).text('Tipo | Descrição | Qtd | Vlr. Unitário | Vlr. Total');
+            doc.moveDown(0.3);
+
+            exportData.itens.forEach((item) => {
+                if (doc.y > 760) {
+                    doc.addPage();
+                    doc.fontSize(10).text('Tipo | Descrição | Qtd | Vlr. Unitário | Vlr. Total');
+                    doc.moveDown(0.3);
+                }
+
+                const line = `${item.tipo} | ${item.descricao} | ${item.quantidade} | ${formatCurrency(item.valorUnitario)} | ${formatCurrency(item.valorTotal)}`;
+                doc.text(line, { width: 520 });
+            });
+
+            doc.end();
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: 'Erro ao exportar orçamento em PDF.' });
+        }
+    },
+
+    async exportExcel(req, res) {
+        try {
+            const { id } = req.params;
+            const exportData = await orcamentoModel.findExportDataById(id);
+
+            if (exportData === -1) {
+                return res.status(404).json({ message: 'Orçamento não encontrado.' });
+            }
+
+            if (req.clienteId && exportData.orcamento.clienteId !== req.clienteId) {
+                return res.status(403).json({ message: 'Acesso negado a este orçamento.' });
+            }
+
+            const safeName = sanitizeFileName(exportData.orcamento.nome);
+            const valorTotalOrcamento = exportData.itens.reduce(
+                (acc, item) => acc + (Number(item.valorTotal) || 0),
+                0
+            );
+
+            const resumoRows = [
+                { Informacao: 'Nome do Orçamento', Detalhe: exportData.orcamento.nome },
+                { Informacao: 'Projeto', Detalhe: exportData.orcamento.projetoNome },
+                { Informacao: 'Cliente', Detalhe: exportData.orcamento.clienteNome },
+                { Informacao: 'Data de Criação', Detalhe: formatDate(exportData.orcamento.dataCriacao) },
+                { Informacao: 'Status', Detalhe: exportData.orcamento.status },
+                { Informacao: 'Valor Total do Orçamento', Detalhe: formatCurrency(valorTotalOrcamento) }
+            ];
+
+            const itensRows = exportData.itens.map((item) => ({
+                'Tipo de Item': item.tipo,
+                'Descrição': item.descricao,
+                Quantidade: item.quantidade,
+                'Valor Unitário (R$)': formatCurrency(item.valorUnitario),
+                'Valor Total do Item (R$)': formatCurrency(item.valorTotal),
+                'Valor Total do Orçamento (R$)': formatCurrency(valorTotalOrcamento)
+            }));
+
+            const wb = XLSX.utils.book_new();
+            const wsResumo = XLSX.utils.json_to_sheet(resumoRows);
+            const wsItens = XLSX.utils.json_to_sheet(
+                itensRows.length
+                    ? itensRows
+                    : [{
+                        'Tipo de Item': '-',
+                        'Descrição': 'Este orçamento não possui itens cadastrados.',
+                        Quantidade: 0,
+                        'Valor Unitário (R$)': formatCurrency(0),
+                        'Valor Total do Item (R$)': formatCurrency(0),
+                        'Valor Total do Orçamento (R$)': formatCurrency(valorTotalOrcamento)
+                    }]
+            );
+
+            wsResumo['!cols'] = [{ wch: 30 }, { wch: 50 }];
+            wsItens['!cols'] = [{ wch: 18 }, { wch: 40 }, { wch: 12 }, { wch: 20 }, { wch: 22 }, { wch: 30 }];
+
+            XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo');
+            XLSX.utils.book_append_sheet(wb, wsItens, 'Itens');
+
+            const fileBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="orcamento-${safeName || id}.xlsx"`);
+
+            return res.send(fileBuffer);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: 'Erro ao exportar orçamento em Excel.' });
         }
     },
 }

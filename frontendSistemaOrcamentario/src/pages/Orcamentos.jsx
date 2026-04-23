@@ -3,7 +3,7 @@ import Table from '../components/Table';
 import Modal from '../components/Modal';
 import Form from '../components/Form';
 import Loading from '../components/Loading';
-import { FaCartPlus, FaEdit, FaEye, FaFileInvoiceDollar, FaPlusCircle, FaTrash } from 'react-icons/fa';
+import { FaCartPlus, FaEdit, FaEye, FaFileExcel, FaFilePdf, FaFileUpload, FaTrash } from 'react-icons/fa';
 import './Pages.css';
 import HomePage from '../components/HomePage';
 import api from '../service/api';
@@ -19,6 +19,7 @@ const Orcamentos = () => {
   const [orcamentos, setOrcamentos] = useState([]);
   const [projetos, setProjetos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openExportMenuId, setOpenExportMenuId] = useState(null);
 
 
   const { user } = useContext(AuthContext);
@@ -127,6 +128,40 @@ const Orcamentos = () => {
     }
   };
 
+  const getFileExtension = (format) => (format === 'pdf' ? 'pdf' : 'xlsx');
+
+  const downloadBudget = async (id, nomeOrcamento, format) => {
+    try {
+      const response = await api.get(`/orcamentos/orcamento/${id}/export/${format}`, {
+        responseType: 'blob'
+      });
+
+      const extension = getFileExtension(format);
+      const safeName = (nomeOrcamento || `orcamento-${id}`)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9-_]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `orcamento-${safeName || id}.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+
+      toast.success(`Download do arquivo ${format.toUpperCase()} iniciado!`);
+      setOpenExportMenuId(null);
+    } catch (error) {
+      console.error(`Erro ao exportar orçamento em ${format}:`, error);
+      toast.error(`Erro ao exportar orçamento em ${format.toUpperCase()}.`);
+    }
+  };
+
   const budgetFields = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'dataCriacao', label: 'Data de Criação', type: 'date', required: true },
@@ -198,6 +233,31 @@ const Orcamentos = () => {
             >
               <button title='Ver Itens do orçamento' className="btn-showItems"><FaEye /></button>
             </Link>
+            <div className="export-menu-wrapper">
+              <button
+                title='Exportar orçamento'
+                className="btn-export"
+                onClick={() => setOpenExportMenuId(openExportMenuId === id ? null : id)}
+              >
+                <FaFileUpload />
+              </button>
+              {openExportMenuId === id && (
+                <div className="export-tooltip-menu">
+                  <button
+                    className="export-option"
+                    onClick={() => downloadBudget(id, row.nome, 'pdf')}
+                  >
+                    <FaFilePdf /> PDF
+                  </button>
+                  <button
+                    className="export-option"
+                    onClick={() => downloadBudget(id, row.nome, 'excel')}
+                  >
+                    <FaFileExcel /> Excel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
         )
