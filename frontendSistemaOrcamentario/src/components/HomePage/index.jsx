@@ -16,10 +16,10 @@ function HomePage({ titulo, botao, onButtonClick }) {
                 <h1>{titulo}</h1>
                 {
                     !isUserRole  && (
-                        <button className="btn-novo" onClick={onButtonClick}>
+                        <button className="btn-novo" onClick={onButtonClick} aria-label={botao}>
                             <div className="btn-content">
                                 <FaPlus />
-                                {botao}
+                                <span className="btn-label">{botao}</span>
                             </div>
                         </button>
                     )

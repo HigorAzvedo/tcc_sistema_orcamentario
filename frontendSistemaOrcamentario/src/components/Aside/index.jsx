@@ -19,7 +19,7 @@ import {
   FaItunes
 } from 'react-icons/fa';
 
-const Aside = () => {
+const Aside = ({ isCollapsed = false, onNavigate = () => {} }) => {
   const location = useLocation();
   const { user } = useContext(AuthContext);
 
@@ -31,28 +31,42 @@ const Aside = () => {
   const isOrcamentistaRole = user?.role === 'orcamentista';
   const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
 
+  const renderMenuItem = (to, icon, label) => (
+    <li>
+      <Link
+        to={to}
+        className={isActive(to) ? 'active' : ''}
+        onClick={onNavigate}
+        title={isCollapsed ? label : undefined}
+      >
+        {icon}
+        <span className="sidebar-label">{label}</span>
+      </Link>
+    </li>
+  );
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
 
       <nav className="sidebar-nav">
         <ul>
-          {isOrcamentistaRole && <li><Link to="/dashboard-orcamentista" className={isActive('/dashboard-orcamentista') ? 'active' : ''}><FaTachometerAlt /> Meu Painel</Link></li>}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/dashboard" className={isActive('/dashboard') ? 'active' : ''}><FaTachometerAlt /> Dashboard</Link></li>}
+          {isOrcamentistaRole && renderMenuItem('/dashboard-orcamentista', <FaTachometerAlt />, 'Meu Painel')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/dashboard', <FaTachometerAlt />, 'Dashboard')}
           
-          {!isOrcamentistaRole && <li><Link to="/projetos" className={isActive('/projetos') ? 'active' : ''}><FaProjectDiagram /> Projetos</Link></li>}
-          {!isOrcamentistaRole && <li><Link to="/orcamentos" className={isActive('/orcamentos') ? 'active' : ''}><FaFileInvoiceDollar /> Orçamentos</Link></li>}
+          {!isOrcamentistaRole && renderMenuItem('/projetos', <FaProjectDiagram />, 'Projetos')}
+          {!isOrcamentistaRole && renderMenuItem('/orcamentos', <FaFileInvoiceDollar />, 'Orçamentos')}
           
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/itens-orcamentos" className={isActive('/itens-orcamentos') ? 'active' : ''}><FaItunes /> Itens Orçamentos</Link></li>}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/clientes" className={isActive('/clientes') ? 'active' : ''}><FaUsers /> Clientes</Link></li>}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/itens-orcamentos', <FaItunes />, 'Itens Orçamentos')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/clientes', <FaUsers />, 'Clientes')}
           {/* {!isUserRole && !isOrcamentistaRole && <li><Link to="/produtos" className={isActive('/produtos') ? 'active' : ''}><FaBoxOpen /> Produtos</Link></li>} */}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/fornecedores" className={isActive('/fornecedores') ? 'active' : ''}><FaTruck /> Fornecedores</Link></li>}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/materiais" className={isActive('/materiais') ? 'active' : ''}><FaBoxes /> Materiais</Link></li>}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/maquinario" className={isActive('/maquinario') ? 'active' : ''}><FaTools /> Maquinário</Link></li>}
-          {isAdminOrManager && <li><Link to="/orcamentistas" className={isActive('/orcamentistas') ? 'active' : ''}><FaUserTie /> Orçamentistas</Link></li>}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/areas" className={isActive('/areas') ? 'active' : ''}><FaChartArea /> Áreas</Link></li>}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/cargos" className={isActive('/cargos') ? 'active' : ''}><FaIdBadge /> Cargos</Link></li>}
-          {!isUserRole && !isOrcamentistaRole && <li><Link to="/relatorios" className={isActive('/relatorios') ? 'active' : ''}><FaChartBar /> Relatórios</Link></li>}
-          <li><Link to="/configuracoes" className={isActive('/configuracoes') ? 'active' : ''}><FaCogs /> Configurações</Link></li>
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/fornecedores', <FaTruck />, 'Fornecedores')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/materiais', <FaBoxes />, 'Materiais')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/maquinario', <FaTools />, 'Maquinário')}
+          {isAdminOrManager && renderMenuItem('/orcamentistas', <FaUserTie />, 'Orçamentistas')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/areas', <FaChartArea />, 'Áreas')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/cargos', <FaIdBadge />, 'Cargos')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/relatorios', <FaChartBar />, 'Relatórios')}
+          {renderMenuItem('/configuracoes', <FaCogs />, 'Configurações')}
         </ul>
       </nav>
     </aside>

@@ -41,3 +41,13 @@
     justify-content: center;
     gap: 8px;
 }
+
+@media (max-width: 426px) {
+    .btn-label {
+        display: none;
+    }
+
+    .btn-novo {
+        padding: 10px 12px;
+    }
+}
