@@ -63,7 +63,15 @@ app.use('/orcamentos', budgetRoutes)
 const supllierRoutes = require('./routes/fornecedor')
 app.use('/fornecedores', supllierRoutes)
 
-app.listen(port , () => {
-    console.log(`Servidor ativo na porta ${port}`)
+app.get('/', (req, res) => {
+    res.json({ ok: true, message: 'Backend do sistema orcamentario ativo' });
 });
+
+if (require.main === module && !process.env.VERCEL) {
+    app.listen(port, () => {
+        console.log(`Servidor ativo na porta ${port}`)
+    });
+}
+
+module.exports = app;
 
