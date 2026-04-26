@@ -11,11 +11,20 @@ const clienteModel = require('../model/clienteModel');
 // email: admin@sistema.com
 // senha: admin123
 
-const jwtCheck = auth({
-    audience: process.env.AUTH0_AUDIENCE,
-    issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}/`,
-    tokenSigningAlg: 'RS256'
-});
+const hasAuth0Config = Boolean(
+    process.env.AUTH0_DOMAIN &&
+    process.env.AUTH0_AUDIENCE
+);
+
+const jwtCheck = hasAuth0Config
+    ? auth({
+        audience: process.env.AUTH0_AUDIENCE,
+        issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}/`,
+        tokenSigningAlg: 'RS256'
+    })
+    : (req, res, next) => {
+        res.status(503).json({ error: 'Auth0 não configurado' });
+    };
 
 const verifyLocalToken = (req, res, next) => {
     try {
