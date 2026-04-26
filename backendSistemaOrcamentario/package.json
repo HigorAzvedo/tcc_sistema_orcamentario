@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "node index.js",
     "start": "node index.js",
+    "db:migrate": "knex migrate:latest --knexfile knexfile.js",
+    "db:rollback": "knex migrate:rollback --knexfile knexfile.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "create-admin": "node scripts/createAdminInteractive.js",
     "create-admin-quick": "node scripts/createAdmin.js",
@@ -23,6 +25,7 @@
     "express-oauth2-jwt-bearer": "^1.7.1",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
+    "pg": "^8.13.3",
     "mysql2": "^3.15.0",
     "pdfkit": "^0.18.0",
     "xlsx": "^0.18.5"

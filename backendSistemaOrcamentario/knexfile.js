@@ -1,21 +1,46 @@
 require('dotenv').config();
 
+const sharedMigrations = {
+  directory: "./src/database/migrations"
+};
+
+const sharedSeeds = {
+  directory: "./src/database/seeds"
+};
+
+const neonConnection = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    }
+  : null;
+
 module.exports = {
   development: {
-    client: "mysql2",
-    connection: {
+    client: neonConnection ? "pg" : "mysql2",
+    connection: neonConnection || {
       host: process.env.DB_HOST || "localhost",
       port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER || "root",
       password: process.env.DB_PASSWORD || "",
       database: process.env.DB_NAME || "sistema_orcamentario"
     },
-    migrations: {
-      directory: "./src/database/migrations"
+    migrations: sharedMigrations,
+    seeds: sharedSeeds
+  },
+  production: {
+    client: "pg",
+    connection: neonConnection || {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME
     },
-    seeds: {
-      directory: "./src/database/seeds"
-    }
+    migrations: sharedMigrations,
+    seeds: sharedSeeds
   }
 };
 
