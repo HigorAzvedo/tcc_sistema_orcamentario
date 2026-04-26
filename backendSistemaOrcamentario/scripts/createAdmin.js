@@ -31,7 +31,7 @@ async function createAdmin() {
     console.log('💾 Criando usuário administrador...');
     
     // Cria o usuário
-    const [userId] = await db('Usuarios').insert({
+    const insertResult = await db('Usuarios').insert({
       nome: adminData.nome,
       email: adminData.email,
       senha: hashedPassword,
@@ -39,7 +39,11 @@ async function createAdmin() {
       ativo: true,
       createdAt: db.fn.now(),
       updatedAt: db.fn.now()
-    });
+    }).returning('id');
+
+    const userId = Array.isArray(insertResult)
+      ? (typeof insertResult[0] === 'object' ? insertResult[0].id : insertResult[0])
+      : insertResult;
 
     console.log('✅ Usuário administrador criado com sucesso!');
     console.log('📋 Detalhes:');
