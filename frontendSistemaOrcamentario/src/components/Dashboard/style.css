@@ -119,7 +119,8 @@ h1 {
     gap: 10px;
 }
 
-.btn-detalhes, .btn-excluir {
+.btn-detalhes,
+.btn-excluir {
     border: none;
     padding: 8px;
     border-radius: 4px;
@@ -162,7 +163,7 @@ h1 {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.etapas{
+.etapas {
     display: flex;
     flex-direction: column;
     gap: 30px;
@@ -212,5 +213,17 @@ h1 {
     font-weight: 400;
 }
 
+@media (max-width: 426px) {
+    .cards {
+        flex-direction: column;
+        align-items: center;
+    }
 
+    .numero{
+        display: none;
+    }
 
+    .btn-novo-orcamento{
+        text-wrap: nowrap;
+    }
+}

@@ -22,7 +22,7 @@
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   padding: 30px;
   border-radius: 20px;
-  width: 70vw;
+  width: auto;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
@@ -81,4 +81,16 @@
   color: #333;
   font-size: 24px;
   font-weight: 600;
+}
+
+@media (max-width: 426px) {
+  .modal-content {
+    width: 85%;
+  }
+
+  .modal-content form {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+  }
 }
