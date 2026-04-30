@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const dbProfile = (process.env.DB_PROFILE || 'local').toLowerCase();
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 
 const sharedMigrations = {
   directory: "./src/database/migrations"
@@ -28,7 +29,11 @@ const localConnection = {
 };
 
 const resolveConnection = () => {
-  if (dbProfile === 'deploy' && neonConnection) {
+  if (dbProfile === 'local') {
+    return localConnection;
+  }
+
+  if (hasDatabaseUrl && neonConnection) {
     return neonConnection;
   }
 
