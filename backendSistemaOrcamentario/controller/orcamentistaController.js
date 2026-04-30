@@ -97,6 +97,7 @@ module.exports = {
                 return res.status(500).json({ message: "Ocorreu um erro ao cadastrar o orçamentista." });
             }
         } catch (error) {
+            console.error('Erro ao cadastrar orçamentista:', error);
             return res.status(500).json({ message: "Ocorreu um erro ao cadastrar o orçamentista." });
         }
     },

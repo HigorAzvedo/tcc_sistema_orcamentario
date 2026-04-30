@@ -47,8 +47,28 @@ module.exports = {
             }
 
             const hashedPassword = await bcrypt.hash(usuario.senha, 10);
-            
-            const [id] = await db('Usuarios').insert({
+
+            const clientName = db.client && db.client.config && db.client.config.client;
+
+            if (clientName === 'pg') {
+                const inserted = await db('Usuarios')
+                    .insert({
+                        nome: usuario.nome,
+                        email: usuario.email,
+                        senha: hashedPassword,
+                        role: usuario.role || 'user',
+                        ativo: true,
+                        createdAt: db.fn.now(),
+                        updatedAt: db.fn.now()
+                    })
+                    .returning('id');
+
+                return Array.isArray(inserted)
+                    ? (inserted[0]?.id || inserted[0])
+                    : inserted;
+            }
+
+            const inserted = await db('Usuarios').insert({
                 nome: usuario.nome,
                 email: usuario.email,
                 senha: hashedPassword,
@@ -58,7 +78,7 @@ module.exports = {
                 updatedAt: db.fn.now()
             });
 
-            return id;
+            return Array.isArray(inserted) ? inserted[0] : inserted;
         } catch (error) {
             console.log(error);
             throw error;

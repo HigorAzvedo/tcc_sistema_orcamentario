@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const dbProfile = (process.env.DB_PROFILE || 'local').toLowerCase();
+
 const sharedMigrations = {
   directory: "./src/database/migrations"
 };
@@ -17,28 +19,32 @@ const neonConnection = process.env.DATABASE_URL
     }
   : null;
 
+const localConnection = {
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT || 5432),
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+  database: process.env.DB_NAME || 'sistema_orcamentario'
+};
+
+const resolveConnection = () => {
+  if (dbProfile === 'deploy' && neonConnection) {
+    return neonConnection;
+  }
+
+  return localConnection;
+};
+
 module.exports = {
   development: {
-    client: neonConnection ? "pg" : "mysql2",
-    connection: neonConnection || {
-      host: process.env.DB_HOST || "localhost",
-      port: process.env.DB_PORT || 3306,
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME || "sistema_orcamentario"
-    },
+    client: "pg",
+    connection: resolveConnection(),
     migrations: sharedMigrations,
     seeds: sharedSeeds
   },
   production: {
     client: "pg",
-    connection: neonConnection || {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT || 5432,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    },
+    connection: resolveConnection(),
     migrations: sharedMigrations,
     seeds: sharedSeeds
   }

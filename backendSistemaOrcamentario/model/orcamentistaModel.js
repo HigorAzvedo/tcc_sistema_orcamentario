@@ -49,7 +49,7 @@ module.exports = {
 
     async createWithUser(orcamentistaData) {
         const trx = await db.transaction();
-        
+
         try {
             const existingUser = await trx('Usuarios').where({ email: orcamentistaData.email }).first();
             if (existingUser) {
@@ -73,20 +73,60 @@ module.exports = {
             }
 
             const hashedPassword = await bcrypt.hash(orcamentistaData.senha, 10);
-            const [usuarioId] = await trx('Usuarios').insert({
-                nome: orcamentistaData.nome,
-                email: orcamentistaData.email,
-                senha: hashedPassword,
-                role: 'orcamentista',
-                ativo: true
-            });
 
-            const [orcamentistaId] = await trx('Orcamentistas').insert({
-                nome: orcamentistaData.nome,
-                email: orcamentistaData.email,
-                matricula: orcamentistaData.matricula,
-                usuarioId: usuarioId
-            });
+            const clientName = trx.client && trx.client.config && trx.client.config.client;
+
+            let usuarioId;
+            if (clientName === 'pg') {
+                const insertedUsuario = await trx('Usuarios')
+                    .insert({
+                        nome: orcamentistaData.nome,
+                        email: orcamentistaData.email,
+                        senha: hashedPassword,
+                        role: 'orcamentista',
+                        ativo: true
+                    })
+                    .returning('id');
+
+                usuarioId = Array.isArray(insertedUsuario)
+                    ? (insertedUsuario[0]?.id || insertedUsuario[0])
+                    : insertedUsuario;
+            } else {
+                const insertedUsuario = await trx('Usuarios').insert({
+                    nome: orcamentistaData.nome,
+                    email: orcamentistaData.email,
+                    senha: hashedPassword,
+                    role: 'orcamentista',
+                    ativo: true
+                });
+
+                usuarioId = Array.isArray(insertedUsuario) ? insertedUsuario[0] : insertedUsuario;
+            }
+
+            let orcamentistaId;
+            if (clientName === 'pg') {
+                const insertedOrcamentista = await trx('Orcamentistas')
+                    .insert({
+                        nome: orcamentistaData.nome,
+                        email: orcamentistaData.email,
+                        matricula: orcamentistaData.matricula,
+                        usuarioId: usuarioId
+                    })
+                    .returning('id');
+
+                orcamentistaId = Array.isArray(insertedOrcamentista)
+                    ? (insertedOrcamentista[0]?.id || insertedOrcamentista[0])
+                    : insertedOrcamentista;
+            } else {
+                const insertedOrcamentista = await trx('Orcamentistas').insert({
+                    nome: orcamentistaData.nome,
+                    email: orcamentistaData.email,
+                    matricula: orcamentistaData.matricula,
+                    usuarioId: usuarioId
+                });
+
+                orcamentistaId = Array.isArray(insertedOrcamentista) ? insertedOrcamentista[0] : insertedOrcamentista;
+            }
 
             await trx.commit();
             return { usuarioId, orcamentistaId };
@@ -133,7 +173,6 @@ module.exports = {
         }
     },
 
-    // Métodos para gerenciar vínculos com clientes
     async findByUsuarioId(usuarioId) {
         try {
             const orcamentista = await db('Orcamentistas')
@@ -148,7 +187,6 @@ module.exports = {
 
     async vincularCliente(orcamentistaId, clienteId) {
         try {
-            // Verificar se já existe o vínculo
             const vinculoExistente = await db('OrcamentistaCliente')
                 .where({ orcamentistaId, clienteId })
                 .first();

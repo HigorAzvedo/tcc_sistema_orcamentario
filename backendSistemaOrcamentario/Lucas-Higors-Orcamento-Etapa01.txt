@@ -1,2 +1,0 @@
--- Padronizar os nomes as rotas de get de listagem. Atualmente está: localhost:3000/clientes/cliente . Faz mais sentido ser: localhost:3001/clientes (ja que a busca é para uma lista de clientes e não um cliente unico)
--- Implementar os métodos que trazem os objetos e suas composições. Exemplo: Como recuperar os serviços fornecidos por determinado fornecedor?

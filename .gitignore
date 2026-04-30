@@ -45,6 +45,7 @@ dist-ssr
 
 # Variáveis de ambiente
 .env
+.env.example
 .env.local
 .env.development.local
 .env.test.local
@@ -53,3 +54,9 @@ dist-ssr
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+#README.md
+.CRIAR_ADMIN.md
+.DATABASE_DIAGRAM.md
+.DATABASE_SEED.md
+.ALTERAR_SENHA.md
