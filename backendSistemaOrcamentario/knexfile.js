@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const dbProfile = (process.env.DB_PROFILE || 'local').toLowerCase();
+const dbProfile = process.env.DB_PROFILE ? process.env.DB_PROFILE.toLowerCase() : undefined;
 const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 
 const sharedMigrations = {
