@@ -19,7 +19,7 @@ import {
   FaItunes
 } from 'react-icons/fa';
 
-const Aside = ({ isCollapsed = false, onNavigate = () => {} }) => {
+const Aside = ({ isCollapsed = false, onNavigate = () => { } }) => {
   const location = useLocation();
   const { user } = useContext(AuthContext);
 
@@ -52,10 +52,10 @@ const Aside = ({ isCollapsed = false, onNavigate = () => {} }) => {
         <ul>
           {isOrcamentistaRole && renderMenuItem('/dashboard-orcamentista', <FaTachometerAlt />, 'Meu Painel')}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/dashboard', <FaTachometerAlt />, 'Dashboard')}
-          
-          {isOrcamentistaRole && renderMenuItem('/projetos', <FaProjectDiagram />, 'Projetos')}
-          {isOrcamentistaRole && renderMenuItem('/orcamentos', <FaFileInvoiceDollar />, 'Orçamentos')}
-          
+
+          {renderMenuItem('/projetos', <FaProjectDiagram />, 'Projetos')}
+          {renderMenuItem('/orcamentos', <FaFileInvoiceDollar />, 'Orçamentos')}
+
           {/*  {!isUserRole && !isOrcamentistaRole && renderMenuItem('/itens-orcamentos', <FaItunes />, 'Itens Orçamentos')}*/}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/clientes', <FaUsers />, 'Clientes')}
           {/* {!isUserRole && !isOrcamentistaRole && <li><Link to="/produtos" className={isActive('/produtos') ? 'active' : ''}><FaBoxOpen /> Produtos</Link></li>} */}
