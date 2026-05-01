@@ -42,8 +42,6 @@ const Materiais = () => {
         return;
       }
       setMateriais(response.data);
-      toast.success('Materiais carregados com sucesso!');
-      console.log(response.data);
     } catch (error) {
       console.error('Erro ao buscar materiais:', error);
       toast.error('Erro ao buscar materiais.');

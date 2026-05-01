@@ -28,8 +28,6 @@ const Fornecedores = () => {
         return;
       }
       setFornecedores(response.data);
-      toast.success('Fornecedores carregados com sucesso!');
-      console.log(response.data);
     } catch (error) {
       console.error('Erro ao buscar fornecedor:', error);
       toast.error('Erro ao buscar fornecedor.');

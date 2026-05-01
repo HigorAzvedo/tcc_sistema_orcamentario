@@ -38,7 +38,6 @@ const Orcamentistas = () => {
         return;
       }
       setOrcamentistas(response.data);
-      toast.success('Orçamentistas carregados com sucesso!');
     } catch (error) {
       console.error('Erro ao buscar orçamentistas:', error);
       toast.error('Erro ao buscar orçamentistas.');

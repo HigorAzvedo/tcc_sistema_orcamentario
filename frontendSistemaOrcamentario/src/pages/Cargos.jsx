@@ -49,7 +49,6 @@ const Cargos = () => {
         return;
       }
       setCargos(response.data);
-      toast.success('Cargo carregados com sucesso!');
       console.log(response.data);
     } catch (error) {
       console.error('Erro ao buscar Cargo:', error);

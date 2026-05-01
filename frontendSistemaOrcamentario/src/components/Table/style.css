@@ -3,6 +3,32 @@ h1 {
   color: #333;
 }
 
+.table-wrapper {
+  width: 100%;
+}
+
+.table-search-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.table-search-input {
+  width: min(100%, 320px);
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.table-search-input:focus {
+  border-color: #4f7ef7;
+  box-shadow: 0 0 0 3px rgba(79, 126, 247, 0.16);
+}
+
 .table-container {
   overflow-x: auto;
   border-radius: 8px;
@@ -34,6 +60,13 @@ tr:nth-child(even) {
   border-bottom: 1px solid #eee;
   color: #555;
   font-size: 14px;
+}
+
+.table-empty-state {
+  text-align: center;
+  padding: 28px 16px;
+  color: #666;
+  font-style: italic;
 }
 
 
@@ -123,6 +156,14 @@ tr:nth-child(even) {
 
 
 @media (max-width: 768px) {
+  .table-search-container {
+    justify-content: stretch;
+  }
+
+  .table-search-input {
+    width: 100%;
+  }
+
   .table-container {
     font-size: 12px;
   }
