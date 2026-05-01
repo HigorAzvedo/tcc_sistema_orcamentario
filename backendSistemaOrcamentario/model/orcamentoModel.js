@@ -132,6 +132,26 @@ module.exports = {
         }
     },
 
+    async getProjetosByClienteIds(clienteIds) {
+        try {
+            if (!Array.isArray(clienteIds) || clienteIds.length === 0) {
+                return [];
+            }
+
+            const projetos = await db('Projetos')
+                .whereIn('clienteId', clienteIds)
+                .select('id', 'nome');
+
+            return projetos.map(projeto => ({
+                value: projeto.id,
+                label: projeto.nome
+            }));
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    },
+
     async getProjetosByOrcamentoId(orcamentoId) {
         try {
             const orcamento = await db('Orcamentos')
@@ -175,6 +195,54 @@ module.exports = {
                 .join('Projetos', 'Orcamentos.projetoId', '=', 'Projetos.id')
                 .join('Cliente', 'Projetos.clienteId', '=', 'Cliente.id')
                 .where('Projetos.clienteId', clienteId)
+                .select(
+                    'Orcamentos.*',
+                    'Projetos.nome as nomeProjeto',
+                    'Projetos.clienteId',
+                    'Cliente.nome as nomeCliente'
+                );
+
+            const result = orcamentos.map(orcamento => {
+                return {
+                    id: orcamento.id,
+                    nome: orcamento.nome,
+                    dataCriacao: orcamento.dataCriacao,
+                    status: orcamento.status,
+                    valorTotalItens: orcamento.valorTotalItens,
+                    projetoId: orcamento.projetoId,
+                    created_at: orcamento.created_at,
+                    updated_at: orcamento.updated_at,
+                    projetoNome: orcamento.nomeProjeto,
+                    clienteId: orcamento.clienteId,
+                    clienteNome: orcamento.nomeCliente,
+                    projeto: {
+                        id: orcamento.projetoId,
+                        nome: orcamento.nomeProjeto
+                    },
+                    cliente: {
+                        id: orcamento.clienteId,
+                        nome: orcamento.nomeCliente
+                    }
+                };
+            });
+
+            return result;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    },
+
+    async findByClienteIds(clienteIds) {
+        try {
+            if (!Array.isArray(clienteIds) || clienteIds.length === 0) {
+                return [];
+            }
+
+            const orcamentos = await db('Orcamentos')
+                .join('Projetos', 'Orcamentos.projetoId', '=', 'Projetos.id')
+                .join('Cliente', 'Projetos.clienteId', '=', 'Cliente.id')
+                .whereIn('Projetos.clienteId', clienteIds)
                 .select(
                     'Orcamentos.*',
                     'Projetos.nome as nomeProjeto',

@@ -44,6 +44,26 @@ module.exports = {
             throw error;
         }
     },
+
+    async findByClienteIds(clienteIds) {
+        try {
+            if (!Array.isArray(clienteIds) || clienteIds.length === 0) {
+                return [];
+            }
+
+            const projects = await db("Projetos")
+                .leftJoin("Cliente", "Projetos.clienteId", "=", "Cliente.id")
+                .whereIn("Projetos.clienteId", clienteIds)
+                .select(
+                    "Projetos.*",
+                    "Cliente.nome as nomeCliente"
+                );
+            return projects;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    },
     async create(project) {
         try {
             const existingClient = await db("Cliente").where({id: project.clienteId}).first();

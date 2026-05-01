@@ -3,6 +3,20 @@ const db = require('../src/database/connection.js');
 const PDFDocument = require('pdfkit');
 const XLSX = require('xlsx');
 
+const hasClienteAccess = (req, clienteId) => {
+    const clienteIdNumber = Number(clienteId);
+
+    if (Array.isArray(req.clienteIds)) {
+        return req.clienteIds.includes(clienteIdNumber);
+    }
+
+    if (req.clienteId) {
+        return Number(req.clienteId) === clienteIdNumber;
+    }
+
+    return true;
+};
+
 const formatCurrency = (value) => {
     const numeric = Number(value) || 0;
     return numeric.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -34,9 +48,11 @@ module.exports = {
 
     async findAll(req, res) {
         try {
-            const budgets = req.clienteId 
-                ? await orcamentoModel.findByClienteId(req.clienteId)
-                : await orcamentoModel.findAll();
+            const budgets = Array.isArray(req.clienteIds)
+                ? await orcamentoModel.findByClienteIds(req.clienteIds)
+                : req.clienteId
+                    ? await orcamentoModel.findByClienteId(req.clienteId)
+                    : await orcamentoModel.findAll();
             return res.json(budgets);
         } catch (error) {
             return res.status(500).json({ message: "Ocorreu um erro ao buscar os orçamentos." });
@@ -53,11 +69,9 @@ module.exports = {
             }
 
             // Verifica se o usuário tem permissão para ver este orçamento
-            if (req.clienteId) {
-                const projeto = await db('Projetos').where({ id: result.projetoId }).first();
-                if (projeto && projeto.clienteId !== req.clienteId) {
-                    return res.status(403).json({ message: "Acesso negado a este orçamento." });
-                }
+            const projeto = await db('Projetos').where({ id: result.projetoId }).first();
+            if (projeto && !hasClienteAccess(req, projeto.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado a este orçamento." });
             }
 
             return res.json(result);
@@ -88,25 +102,51 @@ module.exports = {
     },
 
     async update(req, res) {
-        const { id } = req.params;
-        var allBudgetData = req.body;
+        try {
+            const { id } = req.params;
+            var allBudgetData = req.body;
 
-        var budget = {
-            id: id,
-            nome: allBudgetData.nome,
-            dataCriacao: allBudgetData.dataCriacao,
-            status: allBudgetData.status,
-            projetoId: allBudgetData.projetoId,
-        }
+            const existingBudget = await orcamentoModel.findById(id);
 
-        if (allBudgetData.photoUri) budget.photoUri = allBudgetData.photoUri;
+            if (existingBudget === -1) {
+                return res.status(404).json({ message: "Orçamento não encontrado" });
+            }
 
-        var result = await orcamentoModel.update(budget);
+            const currentProject = await db('Projetos').where({ id: existingBudget.projetoId }).first();
 
-        if (result === 0) {
-            return res.status(404).json({ message: "Usuario não encontrado" });
-        } else {
-            return res.status(200).json({ message: "Cliente atualizado com sucesso!" });
+            if (!currentProject || !hasClienteAccess(req, currentProject.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para editar este orçamento." });
+            }
+
+            const targetProject = await db('Projetos').where({ id: allBudgetData.projetoId }).first();
+
+            if (!targetProject) {
+                return res.status(404).json({ message: "Projeto não encontrado" });
+            }
+
+            if (!hasClienteAccess(req, targetProject.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para vincular orçamento a este projeto." });
+            }
+
+            var budget = {
+                id: id,
+                nome: allBudgetData.nome,
+                dataCriacao: allBudgetData.dataCriacao,
+                status: allBudgetData.status,
+                projetoId: allBudgetData.projetoId,
+            }
+
+            if (allBudgetData.photoUri) budget.photoUri = allBudgetData.photoUri;
+
+            var result = await orcamentoModel.update(budget);
+
+            if (result === 0) {
+                return res.status(404).json({ message: "Orçamento não encontrado" });
+            } else {
+                return res.status(200).json({ message: "Orçamento atualizado com sucesso!" });
+            }
+        } catch (error) {
+            return res.status(500).json({ message: "Ocorreu um erro ao atualizar o orçamento." });
         }
     },
 
@@ -145,7 +185,11 @@ module.exports = {
 
     async getAllProjetos(req, res) {
         try {
-            const projetos = await orcamentoModel.getAllProjetos();
+            const projetos = Array.isArray(req.clienteIds)
+                ? await orcamentoModel.getProjetosByClienteIds(req.clienteIds)
+                : req.clienteId
+                    ? await orcamentoModel.getProjetosByClienteIds([req.clienteId])
+                    : await orcamentoModel.getAllProjetos();
             return res.status(200).json(projetos);
         } catch (error) {
             console.log(error);
@@ -160,6 +204,14 @@ module.exports = {
             
             if (projetos === "ORCAMENTO_NOT_FOUND") {
                 return res.status(404).json({ message: "Orçamento não encontrado" });
+            }
+
+            const projeto = projetos[0];
+            if (projeto) {
+                const projetoCompleto = await db('Projetos').where({ id: projeto.value }).first();
+                if (projetoCompleto && !hasClienteAccess(req, projetoCompleto.clienteId)) {
+                    return res.status(403).json({ message: "Acesso negado a este orçamento." });
+                }
             }
             
             return res.status(200).json(projetos);

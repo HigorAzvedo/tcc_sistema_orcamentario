@@ -142,7 +142,7 @@ const Maquinario = () => {
 
   return (
     <>
-      <HomePage titulo="Maquinários" botao="Novo Maquinário" onButtonClick={() => setIsModalOpen(true)} />
+      <HomePage titulo="Equipamentos" botao="Novo Equipamento" onButtonClick={() => setIsModalOpen(true)} />
       {loading ? <Loading /> : <Table columns={columns} data={maquinarios} />}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>

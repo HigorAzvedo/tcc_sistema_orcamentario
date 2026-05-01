@@ -1,4 +1,5 @@
 const itensOrcamentoModel = require('../model/itensOrcamentoModel');
+const db = require('../src/database/connection.js');
 
 const toNullableInt = (value) => {
     if (value === undefined || value === null || value === '') {
@@ -19,6 +20,32 @@ const hasExactlyOneSelectedType = (itemBudget) => {
         .filter(value => value !== null);
 
     return selectedTypes.length === 1;
+};
+
+const hasClienteAccess = (req, clienteId) => {
+    const clienteIdNumber = Number(clienteId);
+
+    if (Array.isArray(req.clienteIds)) {
+        return req.clienteIds.includes(clienteIdNumber);
+    }
+
+    if (req.clienteId) {
+        return Number(req.clienteId) === clienteIdNumber;
+    }
+
+    return true;
+};
+
+const getOrcamentoComProjeto = async (orcamentoId) => {
+    return db('Orcamentos')
+        .join('Projetos', 'Orcamentos.projetoId', '=', 'Projetos.id')
+        .where('Orcamentos.id', orcamentoId)
+        .select(
+            'Orcamentos.id as orcamentoId',
+            'Orcamentos.projetoId as orcamentoProjetoId',
+            'Projetos.clienteId as clienteId'
+        )
+        .first();
 };
 
 module.exports = {
@@ -82,6 +109,20 @@ module.exports = {
                 return res.status(400).json({ message: "Selecione exatamente um tipo de item: material, cargo ou maquinário." });
             }
 
+            const orcamentoComProjeto = await getOrcamentoComProjeto(itemBudget.idOrcamento);
+
+            if (!orcamentoComProjeto) {
+                return res.status(404).json({ message: "Orçamento não encontrado." });
+            }
+
+            if (Number(itemBudget.idProjeto) !== Number(orcamentoComProjeto.orcamentoProjetoId)) {
+                return res.status(400).json({ message: "Projeto informado não pertence ao orçamento selecionado." });
+            }
+
+            if (!hasClienteAccess(req, orcamentoComProjeto.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para adicionar itens neste orçamento." });
+            }
+
             const result = await itensOrcamentoModel.create(itemBudget);
 
             if (result === "PROJECT_NOT_FOUND") {
@@ -136,6 +177,29 @@ module.exports = {
 
             if (!hasExactlyOneSelectedType(itemBudget)) {
                 return res.status(400).json({ message: "Selecione exatamente um tipo de item: material, cargo ou maquinário." });
+            }
+
+            const existingItem = await itensOrcamentoModel.findById(itemBudget.id);
+            if (existingItem === -1) {
+                return res.status(404).json({ message: "Item do orçamento não encontrado" });
+            }
+
+            const orcamentoComProjetoAtual = await getOrcamentoComProjeto(existingItem.idOrcamento);
+            if (!orcamentoComProjetoAtual || !hasClienteAccess(req, orcamentoComProjetoAtual.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para editar este item de orçamento." });
+            }
+
+            const orcamentoComProjetoDestino = await getOrcamentoComProjeto(itemBudget.idOrcamento);
+            if (!orcamentoComProjetoDestino) {
+                return res.status(404).json({ message: "Orçamento não encontrado." });
+            }
+
+            if (Number(itemBudget.idProjeto) !== Number(orcamentoComProjetoDestino.orcamentoProjetoId)) {
+                return res.status(400).json({ message: "Projeto informado não pertence ao orçamento selecionado." });
+            }
+
+            if (!hasClienteAccess(req, orcamentoComProjetoDestino.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para atualizar item neste orçamento." });
             }
 
             const result = await itensOrcamentoModel.update(itemBudget);

@@ -3,10 +3,13 @@ import api from '../service/api';
 import { toast } from 'react-toastify';
 import Loading from '../components/Loading';
 import Modal from '../components/Modal';
-import { FaUserTie, FaBuilding, FaProjectDiagram, FaFileInvoiceDollar, FaPlus, FaTrash } from 'react-icons/fa';
+import Table from '../components/Table';
+import { FaUserTie, FaBuilding, FaProjectDiagram, FaFileInvoiceDollar, FaPlus, FaTrash, FaArrowAltCircleRight, FaEye, FaCartPlus } from 'react-icons/fa';
 import './Pages.css';
 import './OrcamentistaStyles.css';
 import useConfirmAction from '../hooks/useConfirmAction';
+import { Link } from 'react-router-dom';
+import { formatDate } from '../utils/formatters';
 
 const DashboardOrcamentista = () => {
   const [loading, setLoading] = useState(true);
@@ -105,10 +108,84 @@ const DashboardOrcamentista = () => {
     }).format(value);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pt-BR');
+  const formatCurrencyValue = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
+
+  const projetosColumns = [
+    { header: "Projeto", accessor: "nome" },
+    { header: "Cliente", accessor: "clienteNome" },
+    { header: "Data Início", accessor: "dataInicio", render: (value) => formatDate(value) },
+    { header: "Data Fim", accessor: "dataFim", render: (value) => formatDate(value) },
+    {
+      header: "Ações",
+      accessor: "id",
+      render: () => (
+        <div className='container-acoes'>
+          <Link
+            to="/projetos"
+            className="btn-detalhes"
+            title="Ver projetos"
+          >
+            <FaArrowAltCircleRight />
+          </Link>
+        </div>
+      ),
+    },
+  ];
+
+  const orcamentosColumns = [
+    { header: "Orçamento", accessor: "nome" },
+    { header: "Cliente", accessor: "clienteNome" },
+    { header: "Projeto", accessor: "projetoNome" },
+    {
+      header: "Status",
+      accessor: "status",
+      render: (value) => {
+        const statusClass =
+          value === "Aprovado"
+            ? "status status-aprovado"
+            : value === "Pendente"
+              ? "status status-pendente"
+              : value === "Rejeitado"
+                ? "status status-rejeitado"
+                : "status status-revisao";
+        return <span className={statusClass}>{value}</span>;
+      }
+    },
+    {
+      header: "Valor",
+      accessor: "valorTotalItens",
+      render: (value) => formatCurrencyValue(value)
+    },
+    {
+      header: "Ações",
+      accessor: "id",
+      render: (id, row) => (
+        <div className='container-acoes'>
+          <Link
+            to="/adicionar-itens-orcamentos"
+            state={{ orcamentoId: id, orcamentoNome: row.nome, projetoId: row.projetoId }}
+            className="btn-addItems"
+            title="Adicionar Itens ao orçamento"
+          >
+            <FaCartPlus />
+          </Link>
+          <Link
+            to="/ver-itens-orcamentos"
+            state={{ orcamentoId: id, orcamentoNome: row.nome }}
+            className="btn-showItems"
+            title="Ver Itens do orçamento"
+          >
+            <FaEye />
+          </Link>
+        </div>
+      ),
+    },
+  ];
 
   if (loading) return <Loading />;
 
@@ -203,7 +280,7 @@ const DashboardOrcamentista = () => {
             <FaPlus /> Vincular Cliente
           </button>
         </div>
-        
+
         {dadosOrcamentista.clientes.length === 0 ? (
           <div className="empty-state">
             <p>Você não possui clientes vinculados.</p>
@@ -232,7 +309,6 @@ const DashboardOrcamentista = () => {
         )}
       </div>
 
-      {/* Projetos Recentes */}
       <div className="section">
         <h2><FaProjectDiagram /> Projetos Recentes</h2>
         {projetos.length === 0 ? (
@@ -240,32 +316,10 @@ const DashboardOrcamentista = () => {
             <p>Nenhum projeto disponível.</p>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Projeto</th>
-                  <th>Cliente</th>
-                  <th>Data Início</th>
-                  <th>Data Fim</th>
-                </tr>
-              </thead>
-              <tbody>
-                {projetos.slice(0, 5).map(projeto => (
-                  <tr key={projeto.id}>
-                    <td>{projeto.nome}</td>
-                    <td>{projeto.clienteNome}</td>
-                    <td>{formatDate(projeto.dataInicio)}</td>
-                    <td>{formatDate(projeto.dataFim)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table columns={projetosColumns} data={projetos.slice(0, 5)} />
         )}
       </div>
 
-      {/* Orçamentos Recentes */}
       <div className="section">
         <h2><FaFileInvoiceDollar /> Orçamentos Recentes</h2>
         {orcamentos.length === 0 ? (
@@ -273,34 +327,7 @@ const DashboardOrcamentista = () => {
             <p>Nenhum orçamento disponível.</p>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Orçamento</th>
-                  <th>Cliente</th>
-                  <th>Projeto</th>
-                  <th>Status</th>
-                  <th>Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orcamentos.slice(0, 5).map(orcamento => (
-                  <tr key={orcamento.id}>
-                    <td>{orcamento.nome}</td>
-                    <td>{orcamento.clienteNome}</td>
-                    <td>{orcamento.projetoNome}</td>
-                    <td>
-                      <span className={`badge badge-${orcamento.status?.toLowerCase()}`}>
-                        {orcamento.status || 'Pendente'}
-                      </span>
-                    </td>
-                    <td className="text-right">{formatCurrency(orcamento.valorTotalItens)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table columns={orcamentosColumns} data={orcamentos.slice(0, 5)} />
         )}
       </div>
 
@@ -311,7 +338,7 @@ const DashboardOrcamentista = () => {
       }}>
         <div className="modal-content">
           <h2>Vincular-me a um Cliente</h2>
-          
+
           {clientesDisponiveis.length === 0 ? (
             <p>Você já está vinculado a todos os clientes cadastrados no sistema.</p>
           ) : (

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { auth } = require('express-oauth2-jwt-bearer');
 const clienteModel = require('../model/clienteModel');
+const orcamentistaModel = require('../model/orcamentistaModel');
 
 // Usuarios cadastrados no sistema
 // "nome": "Usuário Teste",
@@ -83,6 +84,7 @@ const attachClienteId = async (req, res, next) => {
         // Se for admin ou manager, não precisa filtrar por cliente
         if (req.user.role === 'admin' || req.user.role === 'manager') {
             req.clienteId = null; // null = ver todos
+            req.clienteIds = null;
             return next();
         }
 
@@ -97,6 +99,22 @@ const attachClienteId = async (req, res, next) => {
             }
 
             req.clienteId = cliente.id;
+            req.clienteIds = [cliente.id];
+            return next();
+        }
+
+        if (req.user.role === 'orcamentista') {
+            const orcamentista = await orcamentistaModel.findByUsuarioId(req.user.id);
+
+            if (!orcamentista) {
+                return res.status(403).json({
+                    error: 'Orçamentista não está vinculado a um usuário válido.'
+                });
+            }
+
+            const clientes = await orcamentistaModel.getClientesVinculados(orcamentista.id);
+            req.clienteId = null;
+            req.clienteIds = clientes.map((cliente) => Number(cliente.id));
             return next();
         }
 

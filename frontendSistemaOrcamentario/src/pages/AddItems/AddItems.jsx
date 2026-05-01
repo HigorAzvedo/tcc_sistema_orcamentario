@@ -233,6 +233,7 @@ const AddItems = () => {
               value={projetoSelecionado}
               onChange={(e) => setProjetoSelecionado(e.target.value)}
               className="form-input"
+              disabled
             >
               <option value="">Selecione um projeto</option>
               {projetos.map(projeto => (

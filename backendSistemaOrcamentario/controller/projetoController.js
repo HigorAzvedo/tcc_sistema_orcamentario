@@ -1,13 +1,27 @@
 const projetoModel = require('../model/projetoModel');
 
+const hasClienteAccess = (req, clienteId) => {
+    const clienteIdNumber = Number(clienteId);
+
+    if (Array.isArray(req.clienteIds)) {
+        return req.clienteIds.includes(clienteIdNumber);
+    }
+
+    if (req.clienteId) {
+        return Number(req.clienteId) === clienteIdNumber;
+    }
+
+    return true;
+};
+
 module.exports = {
     async findAll(req, res) {
         try {
-            // Se clienteId está definido (usuário tipo 'user'), filtra por cliente
-            // Se clienteId é null (admin/manager), retorna todos
-            const projects = req.clienteId 
-                ? await projetoModel.findByClienteId(req.clienteId)
-                : await projetoModel.findAll();
+            const projects = Array.isArray(req.clienteIds)
+                ? await projetoModel.findByClienteIds(req.clienteIds)
+                : req.clienteId
+                    ? await projetoModel.findByClienteId(req.clienteId)
+                    : await projetoModel.findAll();
             return res.json(projects);
         } catch (error) {
             return res.status(500).json({ message: "Ocorreu um erro ao buscar os projetos." });
@@ -24,7 +38,7 @@ module.exports = {
             }
 
             // Verifica se o usuário tem permissão para ver este projeto
-            if (req.clienteId && project.clienteId !== req.clienteId) {
+            if (!hasClienteAccess(req, project.clienteId)) {
                 return res.status(403).json({ message: "Acesso negado a este projeto." });
             }
 
@@ -72,6 +86,20 @@ module.exports = {
         try {
             const { id } = req.params;
             const allProjectData = req.body;
+
+            const existingProject = await projetoModel.findById(id);
+
+            if (existingProject === -1) {
+                return res.status(404).json({ message: "Projeto não encontrado" });
+            }
+
+            if (!hasClienteAccess(req, existingProject.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para editar este projeto." });
+            }
+
+            if (!hasClienteAccess(req, allProjectData.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para vincular projeto a este cliente." });
+            }
 
             var project = {
                 id: id,
