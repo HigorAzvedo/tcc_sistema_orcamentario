@@ -17,6 +17,17 @@ const Maquinario = () => {
   const [maquinarios, setMaquinarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const { confirmAction, confirmDialog } = useConfirmAction();
+  const [fornecedores, setFornecedores] = useState([]);
+
+  const findAllFornecedores = async () => {
+    try {
+      const response = await api.get('/fornecedores');
+      setFornecedores(response.data || []);
+    } catch (error) {
+      console.error('Erro ao buscar fornecedores:', error);
+      toast.error('Erro ao buscar fornecedores.');
+    }
+  };
 
   const findAll = async () => {
     setLoading(true);
@@ -27,8 +38,19 @@ const Maquinario = () => {
         toast.info('Nenhum maquinário encontrado.');
         return;
       }
-      setMaquinarios(response.data);
-      console.log(response.data, 'response');
+      // fetch fornecedores for each maquinario and attach
+      const maquinasComFornecedores = await Promise.all(response.data.map(async (m) => {
+        try {
+          const resp = await api.get(`/maquinarios/maquinario/${m.id}/fornecedores`);
+          const nomes = Array.isArray(resp.data) ? resp.data.map(f => f.nome) : [];
+          return { ...m, fornecedores: nomes };
+        } catch (err) {
+          return { ...m, fornecedores: [] };
+        }
+      }));
+
+      setMaquinarios(maquinasComFornecedores);
+      console.log(maquinasComFornecedores, 'response');
     } catch (error) {
       console.error('Erro ao buscar maquinários:', error);
       toast.error('Erro ao buscar maquinários.');
@@ -42,7 +64,8 @@ const Maquinario = () => {
       const response = await api.post('/maquinarios/maquinario', {
         nome: machineData.nome,
         descricao: machineData.descricao,
-        valor: parseFloat(machineData.valor)
+        valor: parseFloat(machineData.valor),
+        fornecedorId: parseInt(machineData.fornecedorId, 10)
       });
       if (response.status === 201) {
         toast.success('Maquinário criado com sucesso!');
@@ -80,7 +103,12 @@ const Maquinario = () => {
     try {
       const response = await api.get(`/maquinarios/maquinario/${id}`);
       if (response.data) {
-        setEditingMachine(response.data);
+        // Buscar fornecedores vinculados ao maquinário
+        const fornecedoresResponse = await api.get(`/maquinarios/maquinario/${id}/fornecedores`);
+        const fornecedoresList = Array.isArray(fornecedoresResponse.data) ? fornecedoresResponse.data : [];
+        const fornecedorId = fornecedoresList.length > 0 ? fornecedoresList[0].id : null;
+        
+        setEditingMachine({ ...response.data, fornecedorId });
         setIsEditModalOpen(true);
       } else {
         toast.error('Maquinário não encontrado.');
@@ -93,12 +121,37 @@ const Maquinario = () => {
 
   const updateMachine = async (machineData) => {
     try {
-      const response = await api.put(`/maquinarios/maquinario/${editingMachine.id}`, {
+      // Extract fornecedorId from machineData
+      const fornecedorId = machineData.fornecedorId;
+      const oldFornecedorId = editingMachine.fornecedorId;
+      
+      // Update machine without fornecedorId
+      const dataToSend = {
         nome: machineData.nome,
         descricao: machineData.descricao,
         valor: parseFloat(machineData.valor)
-      });
+      };
+      
+      const response = await api.put(`/maquinarios/maquinario/${editingMachine.id}`, dataToSend);
       if (response.status === 200) {
+        // If fornecedor changed, remove old and add new
+        if (fornecedorId && fornecedorId !== oldFornecedorId) {
+          // Remove old fornecedor
+          if (oldFornecedorId) {
+            try {
+              await api.delete(`/maquinarios/maquinario/${editingMachine.id}/fornecedores/${oldFornecedorId}`);
+            } catch {
+              // Fornecedor antigo talvez não exista, continuar
+            }
+          }
+          // Add new fornecedor
+          try {
+            await api.post(`/maquinarios/maquinario/${editingMachine.id}/fornecedores`, { fornecedorId });
+          } catch (error) {
+            console.error('Erro ao atualizar fornecedor:', error);
+          }
+        }
+        
         toast.success('Maquinário atualizado com sucesso!');
         setIsEditModalOpen(false);
         setEditingMachine(null);
@@ -113,7 +166,32 @@ const Maquinario = () => {
   const machineFields = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'descricao', label: 'Descrição', type: 'text', required: true },
-    { name: 'valor', label: 'Valor', type: 'number', required: true, step: '0.01' }
+    { name: 'valor', label: 'Valor', type: 'number', required: true, step: '0.01' },
+    {
+      name: 'fornecedorId',
+      label: 'Fornecedor',
+      type: 'select',
+      required: true,
+      options: fornecedores.map(fornecedor => ({
+        value: fornecedor.id,
+        label: fornecedor.nome
+      }))
+    }
+  ];
+
+  const machineEditFields = [
+    { name: 'nome', label: 'Nome', type: 'text', required: true },
+    { name: 'descricao', label: 'Descrição', type: 'text', required: true },
+    { name: 'valor', label: 'Valor', type: 'number', required: true, step: '0.01' },
+    {
+      name: 'fornecedorId',
+      label: 'Fornecedor',
+      type: 'select',
+      options: fornecedores.map(fornecedor => ({
+        value: fornecedor.id,
+        label: fornecedor.nome
+      }))
+    }
   ];
 
   const columns = [
@@ -124,6 +202,7 @@ const Maquinario = () => {
       header: "Valor",
       accessor: "valor"
     },
+    { header: 'Fornecedores', accessor: 'fornecedores', render: (fornecedores) => (Array.isArray(fornecedores) ? fornecedores.join(', ') : '') },
     {
       header: "Ações",
       accessor: "id",
@@ -137,6 +216,7 @@ const Maquinario = () => {
   ];
 
   useEffect(() => {
+    findAllFornecedores();
     findAll();
   }, []);
 
@@ -155,7 +235,7 @@ const Maquinario = () => {
           setEditingMachine(null);
         }}>
           <Form
-            fields={machineFields}
+            fields={machineEditFields}
             initialValues={editingMachine}
             onSubmit={updateMachine}
             submitButtonText="Atualizar"

@@ -38,6 +38,36 @@ module.exports = {
         }
     },
 
+    async createWithFornecedores(material, fornecedorIds) {
+        const trx = await db.transaction();
+
+        try {
+            const materialResult = await trx('Materiais').insert(material).returning('id');
+            const materialId = Array.isArray(materialResult) ? materialResult[0].id : materialResult.id;
+
+            const fornecedoresNormalizados = Array.isArray(fornecedorIds)
+                ? [...new Set(fornecedorIds.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))]
+                : [];
+
+            for (const fornecedorId of fornecedoresNormalizados) {
+                const existingAssociation = await trx('FornecedorMaterial')
+                    .where({ materialId, fornecedorId })
+                    .first();
+
+                if (!existingAssociation) {
+                    await trx('FornecedorMaterial').insert({ materialId, fornecedorId });
+                }
+            }
+
+            await trx.commit();
+            return materialResult;
+        } catch (error) {
+            await trx.rollback();
+            console.log(error);
+            throw error;
+        }
+    },
+
     async update(material) {
         try {
             const result = await db('Materiais').where({ id: material.id }).update(material);

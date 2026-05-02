@@ -225,50 +225,53 @@ const Orcamentos = () => {
       header: "Ações",
       accessor: "id",
       render: (id, row) => (
-        !isUserRole && (
-          <div className='container-acoes'>
-            <button title='Editar orçamento' className="btn-detalhes" onClick={() => editBudget(id)}><FaEdit /></button>
-            <button title='Excluir orçamento' className="btn-excluir" onClick={() => deleteBudget(id)}><FaTrash /></button>
-            <Link
-              to="/adicionar-itens-orcamentos"
-              state={{ orcamentoId: id, orcamentoNome: row.nome, projetoId: row.projetoId }}
-            >
-              <button title='Adicionar Itens ao orçamento' className="btn-addItems"><FaCartPlus /></button>
-            </Link>
-            <Link
-              to="/ver-itens-orcamentos"
-              state={{ orcamentoId: id, orcamentoNome: row.nome }}
-            >
-              <button title='Ver Itens do orçamento' className="btn-showItems"><FaEye /></button>
-            </Link>
-            <div className="export-menu-wrapper">
-              <button
-                title='Exportar orçamento'
-                className="btn-export"
-                onClick={() => setOpenExportMenuId(openExportMenuId === id ? null : id)}
+        <div className='container-acoes'>
+          {!isUserRole && (
+            <>
+              <button title='Editar orçamento' className="btn-detalhes" onClick={() => editBudget(id)}><FaEdit /></button>
+              <button title='Excluir orçamento' className="btn-excluir" onClick={() => deleteBudget(id)}><FaTrash /></button>
+              <Link
+                to="/adicionar-itens-orcamentos"
+                state={{ orcamentoId: id, orcamentoNome: row.nome, projetoId: row.projetoId }}
               >
-                <FaFileUpload />
-              </button>
-              {openExportMenuId === id && (
-                <div className="export-tooltip-menu">
-                  <button
-                    className="export-option"
-                    onClick={() => downloadBudget(id, row.nome, 'pdf')}
-                  >
-                    <FaFilePdf /> PDF
-                  </button>
-                  <button
-                    className="export-option"
-                    onClick={() => downloadBudget(id, row.nome, 'excel')}
-                  >
-                    <FaFileExcel /> Excel
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+                <button title='Adicionar Itens ao orçamento' className="btn-addItems"><FaCartPlus /></button>
+              </Link>
+            </>
+          )}
 
-        )
+          <Link
+            to="/ver-itens-orcamentos"
+            state={{ orcamentoId: id, orcamentoNome: row.nome }}
+          >
+            <button title='Ver Itens do orçamento' className="btn-showItems"><FaEye /></button>
+          </Link>
+
+          <div className="export-menu-wrapper">
+            <button
+              title='Exportar orçamento'
+              className="btn-export"
+              onClick={() => setOpenExportMenuId(openExportMenuId === id ? null : id)}
+            >
+              <FaFileUpload />
+            </button>
+            {openExportMenuId === id && (
+              <div className="export-tooltip-menu">
+                <button
+                  className="export-option"
+                  onClick={() => downloadBudget(id, row.nome, 'pdf')}
+                >
+                  <FaFilePdf /> PDF
+                </button>
+                <button
+                  className="export-option"
+                  onClick={() => downloadBudget(id, row.nome, 'excel')}
+                >
+                  <FaFileExcel /> Excel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       ),
     },
   ];

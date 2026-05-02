@@ -27,8 +27,24 @@ const Projetos = () => {
 
   const findAllClientes = async () => {
     try {
-      const response = await api.get('/clientes');
-      setClientes(response.data || []);
+      let response;
+      if (user?.role === 'orcamentista') {
+        response = await api.get('/orcamentistas/meus-clientes');
+      } else {
+        response = await api.get('/clientes');
+      }
+
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          const clientesFormatados = response.data.map(item => ({
+            id: item.value || item.id,
+            nome: item.label || item.nome
+          }));
+          setClientes(clientesFormatados);
+        } else {
+          setClientes(response.data);
+        }
+      }
     } catch (error) {
       console.error('Erro ao buscar clientes:', error);
       toast.error('Erro ao buscar clientes.');

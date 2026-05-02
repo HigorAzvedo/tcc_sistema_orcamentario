@@ -29,7 +29,7 @@ const DashboardOrcamentista = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Buscar dados do orçamentista e clientes vinculados
+
       const dadosResponse = await api.get('/orcamentistas/meus-dados');
       setDadosOrcamentista(dadosResponse.data);
 
@@ -331,7 +331,6 @@ const DashboardOrcamentista = () => {
         )}
       </div>
 
-      {/* Modal para Vincular Cliente */}
       <Modal isOpen={isModalOpen} onClose={() => {
         setIsModalOpen(false);
         setSelectedClienteId('');

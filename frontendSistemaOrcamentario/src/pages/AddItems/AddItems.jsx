@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import api from '../../service/api';
+import Table from '../../components/Table';
 import './AddItems.css';
 
 const itemTabs = [
@@ -39,6 +40,7 @@ const AddItems = () => {
     try {
       const response = await api.get('/itensOrcamentos/itensOrcamento/options');
       if (response.data) {
+        console.log(response.data, 'options response');
         setMateriais(response.data.materiais || []);
         setCargos(response.data.cargos || []);
         setMaquinarios(response.data.maquinarios || []);
@@ -219,6 +221,28 @@ const AddItems = () => {
     }
   };
 
+  const columns = [
+    { header: 'Tipo', accessor: 'tipoItemLabel' },
+    { header: 'Item', accessor: 'itemNome', render: (value) => value || 'N/A' },
+    { header: 'Descrição', accessor: 'descricao', render: (value) => value.length > 0 ? value : 'N/A' },
+    { header: 'Qtd.', accessor: 'quantidade', render: (value) => value.toFixed(2) },
+    { header: 'Valor Unit.', accessor: 'valorUnitario', render: (value) => `R$ ${value.toFixed(2)}` },
+    { header: 'Valor Total', accessor: 'valorTotal', render: (value) => `R$ ${value.toFixed(2)}` },
+    {
+      header: 'Ações',
+      accessor: 'id',
+      render: (id) => (
+        <button
+          onClick={() => removerItem(id)}
+          className="btn-remover"
+          title="Remover item"
+        >
+          <FaTrash />
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className="add-items-container">
       <div className="add-items-header">
@@ -332,7 +356,7 @@ const AddItems = () => {
           </div> */}
 
           <div className="form-group">
-            <label>Quantidade</label>
+            <label>Quantidade </label>
             <input
               type="number"
               placeholder="0"
@@ -365,46 +389,12 @@ const AddItems = () => {
       </div>
 
       <div className="tabela-container">
-        <table className="tabela-itens">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Item</th>
-              <th>Descrição</th>
-              <th>Qtd.</th>
-              <th>Valor Unit.</th>
-              <th>Valor Total</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {itensAdicionados.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="texto-vazio">Nenhum item adicionado ainda.</td>
-              </tr>
-            ) : (
-              itensAdicionados.map(item => (
-                <tr key={item.id}>
-                  <td>{item.tipoItemLabel}</td>
-                  <td>{item.itemNome || 'N/A'}</td>
-                  <td>{item.descricao.length > 0 ? item.descricao : 'N/A'}</td>
-                  <td>{item.quantidade.toFixed(2)}</td>
-                  <td>R$ {item.valorUnitario.toFixed(2)}</td>
-                  <td>R$ {item.valorTotal.toFixed(2)}</td>
-                  <td>
-                    <button
-                      onClick={() => removerItem(item.id)}
-                      className="btn-remover"
-                      title="Remover item"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <Table 
+          columns={columns} 
+          data={itensAdicionados}
+          searchable={false}
+          emptyMessage="Nenhum item adicionado ainda."
+        />
       </div>
 
       <div className="footer-container">

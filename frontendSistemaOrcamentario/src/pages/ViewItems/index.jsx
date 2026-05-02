@@ -1,14 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../service/api';
 import Modal from '../../components/Modal';
 import Form from '../../components/Form';
 import Loading from '../../components/Loading';
+import Table from '../../components/Table';
 import { FaEdit, FaTrash, FaFileUpload, FaFilePdf, FaFileExcel } from 'react-icons/fa';
 import './style.css';
 import '../Pages.css';
 import useConfirmAction from '../../hooks/useConfirmAction';
+import { AuthContext } from '../../context/AuthContext';
 
 // import { Container } from './styles';
 
@@ -34,6 +36,9 @@ function ViewItems() {
         const numberValue = Number(value || 0);
         return numberValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
+
+    const { user } = useContext(AuthContext);
+    const isUserRole = user?.role === 'user';
 
     const resolveItemType = (item) => {
         if (item?.material?.label || item?.idMaterial) {
@@ -347,6 +352,75 @@ function ViewItems() {
         }
     };
 
+    const getTableColumns = () => [
+        {
+            header: 'Item',
+            accessor: 'itemName',
+            render: (value) => value || 'N/A'
+        },
+        {
+            header: 'Projeto',
+            accessor: 'projetoLabel',
+            render: (value) => value || 'N/A'
+        },
+        {
+            header: 'Orçamento',
+            accessor: 'orcamentoLabel',
+            render: (value) => value || 'N/A'
+        },
+        {
+            header: 'Qtd.',
+            accessor: 'quantidade',
+            render: (value) => Number(value || 0).toLocaleString('pt-BR')
+        },
+        {
+            header: 'Valor Unit.',
+            accessor: 'valorUnitario',
+            render: (value) => formatCurrency(value)
+        },
+        {
+            header: 'Valor Total',
+            accessor: 'valorTotal',
+            render: (value) => formatCurrency(value)
+        },
+        {
+            header: 'Ações',
+            accessor: 'id',
+            render: (id) => (
+                isUserRole ? (
+                    <></>)
+                    : (
+
+                        <div className="container-acoes itens-orcamento-list-actions">
+                            <button
+                                title="Editar item de orçamento"
+                                className="btn-detalhes"
+                                onClick={() => editItem(id)}
+                            >
+                                <FaEdit />
+                            </button>
+                            <button
+                                title="Excluir item de orçamento"
+                                className="btn-excluir"
+                                onClick={() => deleteItem(id)}
+                            >
+                                <FaTrash />
+                            </button>
+                        </div>
+                    )
+            )
+        }
+    ];
+
+    const prepareTableData = (items, type) => {
+        return items.map(item => ({
+            ...item,
+            itemName: getItemNameByType(item, type),
+            projetoLabel: item.projeto?.label || 'N/A',
+            orcamentoLabel: item.orcamento?.label || 'N/A'
+        }));
+    };
+
     useEffect(() => {
         if (!orcamentoId) {
             toast.error('Orçamento não identificado. Retornando...');
@@ -362,12 +436,12 @@ function ViewItems() {
                 <h2>Ver Itens do Orçamento: <span className="orcamento-nome">{orcamentoNome || 'Selecione um Orçamento'}</span></h2>
 
                 <div className="export-menu-wrapper">
-                    <div className='export-button-container'>
+                    <div onClick={() => setIsExportMenuOpen((prev) => !prev)} className='export-button-container'>
 
                         <button
                             title="Exportar itens do orçamento"
                             className="btn-export"
-                            onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                            
                         >
                             <FaFileUpload />
                         </button>
@@ -444,45 +518,12 @@ function ViewItems() {
                                         </div>
                                     ) : (
                                         <div className="itens-orcamento-list-wrapper">
-                                            <div className="itens-orcamento-list itens-orcamento-list-header">
-                                                <span>Item</span>
-                                                <span>Projeto</span>
-                                                <span>Orçamento</span>
-                                                <span>Quantidade</span>
-                                                <span>Valor Unitário</span>
-                                                <span>Valor Total</span>
-                                                <span>Ações</span>
-                                            </div>
-
-                                            {sectionItems.map((item) => (
-                                                <div key={item.id} className="itens-orcamento-list itens-orcamento-list-row">
-                                                    <span className="itens-orcamento-item-main">
-                                                        {getItemNameByType(item, type)}
-                                                        {/* <small>ID #{item.id}</small> */}
-                                                    </span>
-                                                    <span>{item.projeto?.label || 'N/A'}</span>
-                                                    <span>{item.orcamento?.label || 'N/A'}</span>
-                                                    <span>{Number(item.quantidade || 0).toLocaleString('pt-BR')}</span>
-                                                    <span>{formatCurrency(item.valorUnitario)}</span>
-                                                    <span>{formatCurrency(item.valorTotal)}</span>
-                                                    <div className="container-acoes itens-orcamento-list-actions">
-                                                        <button
-                                                            title="Editar item de orçamento"
-                                                            className="btn-detalhes"
-                                                            onClick={() => editItem(item.id)}
-                                                        >
-                                                            <FaEdit />
-                                                        </button>
-                                                        <button
-                                                            title="Excluir item de orçamento"
-                                                            className="btn-excluir"
-                                                            onClick={() => deleteItem(item.id)}
-                                                        >
-                                                            <FaTrash />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                            <Table
+                                                columns={getTableColumns()}
+                                                data={prepareTableData(sectionItems, type)}
+                                                searchable={false}
+                                                emptyMessage="Nenhum item cadastrado nesta categoria."
+                                            />
                                         </div>
                                     )}
                                 </section>

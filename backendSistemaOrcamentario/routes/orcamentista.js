@@ -19,6 +19,7 @@ router.get('/clientes-vinculados/:id', verifyLocalToken, orcamentistaController.
 
 // Rotas para o orçamentista acessar seus próprios dados
 router.get('/meus-dados', verifyLocalToken, isOrcamentista, orcamentistaController.getMeusDados);
+router.get('/meus-clientes', verifyLocalToken, isOrcamentista, orcamentistaController.getMeusClientes);
 router.get('/meus-projetos', verifyLocalToken, isOrcamentista, orcamentistaController.getMeusProjetos);
 router.get('/meus-orcamentos', verifyLocalToken, isOrcamentista, orcamentistaController.getMeusOrcamentos);
 

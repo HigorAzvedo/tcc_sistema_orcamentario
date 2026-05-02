@@ -10,11 +10,11 @@ router.get('/orcamento/:id', verifyLocalToken, attachClienteId, orcamentoControl
 router.get('/orcamento/:id/export/pdf', verifyLocalToken, attachClienteId, orcamentoController.exportPdf);
 router.get('/orcamento/:id/export/excel', verifyLocalToken, attachClienteId, orcamentoController.exportExcel);
 
-router.post('/orcamento', verifyLocalToken, isAdminOrManager, orcamentoController.create);
+router.post('/orcamento', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, orcamentoController.create);
 router.put('/orcamento/:id', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, orcamentoController.update);
 router.put('/orcamento/:id/test', verifyLocalToken, isAdminOrManager, orcamentoController.testUpdateValorTotal);
 
-router.delete('/orcamento/:id', verifyLocalToken, isAdmin, orcamentoController.delete);  
+router.delete('/orcamento/:id', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, orcamentoController.delete);  
 
 module.exports = router;
 

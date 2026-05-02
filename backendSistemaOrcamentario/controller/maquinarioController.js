@@ -1,5 +1,10 @@
 const maquinarioModel = require('../model/maquinarioModel');
 
+const normalizeFornecedorIds = (value) => {
+    const values = Array.isArray(value) ? value : (value ? [value] : []);
+    return [...new Set(values.map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0))];
+};
+
 module.exports = {
     async findAll(req, res) {
         try {
@@ -30,13 +35,19 @@ module.exports = {
     async create(req, res) {
         try {
             const allMachineData = req.body;
+            const fornecedorIds = normalizeFornecedorIds(allMachineData.fornecedorId ?? allMachineData.fornecedorIds);
+
+            if (fornecedorIds.length === 0) {
+                return res.status(400).json({ message: "Selecione pelo menos um fornecedor para o maquinário." });
+            }
+
             const machine = {
                 nome: allMachineData.nome,
                 descricao: allMachineData.descricao,
                 valor: allMachineData.valor,
             }
 
-            const result = await maquinarioModel.create(machine);
+            const result = await maquinarioModel.createWithFornecedores(machine, fornecedorIds);
 
             if (typeof result === 'object') {
                 return res.status(201).json({ message: "Maquinário cadastrado com sucesso!" });
@@ -88,5 +99,44 @@ module.exports = {
             return res.status(500).json({ message: "Ocorreu um erro ao deletar o maquinário." });
         }
 
+    }
+    ,
+
+    async getFornecedores(req, res) {
+        try {
+            const { id } = req.params;
+            const fornecedores = await maquinarioModel.getFornecedores(id);
+            return res.json(fornecedores);
+        } catch (error) {
+            return res.status(500).json({ message: "Ocorreu um erro ao buscar os fornecedores." });
+        }
+    },
+
+    async addFornecedor(req, res) {
+        try {
+            const { id } = req.params;
+            const { fornecedorId } = req.body;
+            const result = await maquinarioModel.addFornecedor(id, fornecedorId);
+
+            if (result === "ASSOCIATION_EXISTS") {
+                return res.status(400).json({ message: "Fornecedor já associado a este maquinário." });
+            }
+            return res.status(201).json({ message: "Fornecedor associado ao maquinário com sucesso." });
+        } catch (error) {
+            return res.status(500).json({ message: "Ocorreu um erro ao associar o fornecedor." });
+        }
+    },
+
+    async removeFornecedor(req, res) {
+        try {
+            const { id, fornecedorId } = req.params;
+            const result = await maquinarioModel.removeFornecedor(id, fornecedorId);
+            if (result === 0) {
+                return res.status(404).json({ message: "Associação não encontrada." });
+            }
+            return res.status(200).json({ message: "Fornecedor desassociado do maquinário com sucesso." });
+        } catch (error) {
+            return res.status(500).json({ message: "Ocorreu um erro ao desassociar o fornecedor." });
+        }
     }
 }

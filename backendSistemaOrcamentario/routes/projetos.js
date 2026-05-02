@@ -6,10 +6,10 @@ const { verifyLocalToken, isAdmin, isAdminOrManager, isAdminOrManagerOrOrcamenti
 router.get('/', verifyLocalToken, attachClienteId, projetoController.findAll);
 router.get('/projeto/:id', verifyLocalToken, attachClienteId, projetoController.findById);
 
-router.post('/projeto', verifyLocalToken, isAdminOrManager, projetoController.create);
+router.post('/projeto', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, projetoController.create);
 router.put('/projeto/:id', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, projetoController.update);
 
-router.delete('/projeto/:id', verifyLocalToken, isAdmin, projetoController.delete);
+router.delete('/projeto/:id', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, projetoController.delete);
 
 module.exports = router;
 

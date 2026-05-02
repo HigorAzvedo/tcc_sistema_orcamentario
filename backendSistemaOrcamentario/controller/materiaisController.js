@@ -1,5 +1,10 @@
 const materiaisModel = require('../model/materiaisModel');
 
+const normalizeFornecedorIds = (value) => {
+    const values = Array.isArray(value) ? value : (value ? [value] : []);
+    return [...new Set(values.map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0))];
+};
+
 module.exports = {
 
     async findAll(req, res) {
@@ -29,6 +34,11 @@ module.exports = {
     async create(req, res) {
         try {
             const allMaterialsData = req.body;
+            const fornecedorIds = normalizeFornecedorIds(allMaterialsData.fornecedorId ?? allMaterialsData.fornecedorIds);
+
+            if (fornecedorIds.length === 0) {
+                return res.status(400).json({ message: "Selecione pelo menos um fornecedor para o material." });
+            }
 
             const materials = {
                 nome: allMaterialsData.nome,
@@ -37,16 +47,9 @@ module.exports = {
                 areaId: allMaterialsData.areaId,
             }
 
-            const result = await materiaisModel.create(materials);
+            const result = await materiaisModel.createWithFornecedores(materials, fornecedorIds);
 
             if (typeof result === 'object') {
-                // Se fornecedorIds foi enviado, vincula os fornecedores
-                if (allMaterialsData.fornecedorIds && Array.isArray(allMaterialsData.fornecedorIds)) {
-                    const materialId = result[0]; // ID do material criado
-                    for (const fornecedorId of allMaterialsData.fornecedorIds) {
-                        await materiaisModel.addFornecedor(materialId, fornecedorId);
-                    }
-                }
                 return res.status(201).json({ message: "Material cadastrado com sucesso!" });
             }
 

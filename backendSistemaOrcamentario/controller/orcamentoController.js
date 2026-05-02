@@ -81,23 +81,40 @@ module.exports = {
     },
 
     async create(req, res) {
-        var allBudgetData = req.body;
+        try {
+            var allBudgetData = req.body;
+            const projetoId = Number(allBudgetData.projetoId);
 
-        var budget = {
-            nome: allBudgetData.nome,
-            dataCriacao: allBudgetData.dataCriacao,
-            status: allBudgetData.status,
-            projetoId: allBudgetData.projetoId,
-        }
+            const projeto = await db('Projetos').where({ id: projetoId }).first();
 
-        var result = await orcamentoModel.create(budget);
+            if (!projeto) {
+                return res.status(404).json({ message: "Projeto não encontrado" });
+            }
 
-        if (result === "NOME_EXISTS") {
-            return res.status(400).json({ message: "Orcamento já cadastrado!" });
-        }
+            if (!hasClienteAccess(req, projeto.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para vincular orçamento a este projeto." });
+            }
 
-        if (typeof result === 'object') {
-            return res.status(201).json({ message: "Cliente cadastrado com sucesso!" });
+            var budget = {
+                nome: allBudgetData.nome,
+                dataCriacao: allBudgetData.dataCriacao,
+                status: allBudgetData.status,
+                projetoId,
+            }
+
+            var result = await orcamentoModel.create(budget);
+
+            if (result === "NOME_EXISTS") {
+                return res.status(400).json({ message: "Orcamento já cadastrado!" });
+            }
+
+            if (typeof result === 'object') {
+                return res.status(201).json({ message: "Orçamento cadastrado com sucesso!" });
+            }
+
+            return res.status(500).json({ message: "Ocorreu um erro ao cadastrar o orçamento." });
+        } catch (error) {
+            return res.status(500).json({ message: "Ocorreu um erro ao cadastrar o orçamento." });
         }
     },
 
@@ -153,18 +170,24 @@ module.exports = {
     async delete(req, res) {
         try {
             const { id } = req.params;
-            if (!id) throw new Error("Orcamento id não encontrado!");
+            const budget = await orcamentoModel.findById(id);
+
+            if (budget === -1) {
+                return res.status(404).json({ message: "Orçamento não encontrado" });
+            }
+
+            const projeto = await db('Projetos').where({ id: budget.projetoId }).first();
+
+            if (!projeto || !hasClienteAccess(req, projeto.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para deletar este orçamento." });
+            }
 
             await orcamentoModel.delete(id);
 
             return res.status(200).json("Deletado com sucesso!");
-
         } catch (error) {
             console.log(error.toString());
-            if (error.toString().includes("Orcamento não encontrado")) {
-                return res.status(201).json("Orcamento já deletado!");
-            }
-            return res.status(401).json(JSON.stringify(error));
+            return res.status(500).json(JSON.stringify(error));
         }
 
     },

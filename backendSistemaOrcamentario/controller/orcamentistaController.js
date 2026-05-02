@@ -239,6 +239,31 @@ module.exports = {
         }
     },
 
+    async getMeusClientes(req, res) {
+        try {
+            const usuarioId = req.user.id;
+
+            const orcamentista = await orcamentistaModel.findByUsuarioId(usuarioId);
+
+            if (!orcamentista) {
+                return res.status(404).json({ 
+                    message: "Orçamentista não encontrado para este usuário!" 
+                });
+            }
+
+            const clientes = await orcamentistaModel.getClientesVinculados(orcamentista.id);
+            const clientesFormatados = clientes.map(cliente => ({
+                value: cliente.id,
+                label: cliente.nome
+            }));
+            return res.json(clientesFormatados);
+        } catch (error) {
+            return res.status(500).json({ 
+                message: "Ocorreu um erro ao buscar os clientes." 
+            });
+        }
+    },
+
     async getMeusProjetos(req, res) {
         try {
             const usuarioId = req.user.id;

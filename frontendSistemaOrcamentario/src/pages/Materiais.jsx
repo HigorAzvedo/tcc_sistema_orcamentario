@@ -19,6 +19,7 @@ const Materiais = () => {
   const { confirmAction, confirmDialog } = useConfirmAction();
 
   const [areas, setAreas] = useState([]);
+  const [fornecedores, setFornecedores] = useState([]);
 
     const findAllAreas = async () => {
     try {
@@ -27,6 +28,16 @@ const Materiais = () => {
     } catch (error) {
       console.error('Erro ao buscar áreas:', error);
       toast.error('Erro ao buscar áreas.');
+    }
+  };
+
+  const findAllFornecedores = async () => {
+    try {
+      const response = await api.get('/fornecedores');
+      setFornecedores(response.data || []);
+    } catch (error) {
+      console.error('Erro ao buscar fornecedores:', error);
+      toast.error('Erro ao buscar fornecedores.');
     }
   };
 
@@ -41,7 +52,18 @@ const Materiais = () => {
         toast.info('Nenhum material encontrado.');
         return;
       }
-      setMateriais(response.data);
+      // fetch fornecedores for each material and attach
+      const materiaisComFornecedores = await Promise.all(response.data.map(async (m) => {
+        try {
+          const resp = await api.get(`/materiais/material/${m.id}/fornecedores`);
+          const nomes = Array.isArray(resp.data) ? resp.data.map(f => f.nome) : [];
+          return { ...m, fornecedores: nomes };
+        } catch {
+          return { ...m, fornecedores: [] };
+        }
+      }));
+
+      setMateriais(materiaisComFornecedores);
     } catch (error) {
       console.error('Erro ao buscar materiais:', error);
       toast.error('Erro ao buscar materiais.');
@@ -89,7 +111,12 @@ const Materiais = () => {
     try {
       const response = await api.get(`/materiais/material/${id}`);
       if (response.data) {
-        setEditingMaterial(response.data);
+        // Buscar fornecedores vinculados ao material
+        const fornecedoresResponse = await api.get(`/materiais/material/${id}/fornecedores`);
+        const fornecedoresList = Array.isArray(fornecedoresResponse.data) ? fornecedoresResponse.data : [];
+        const fornecedorId = fornecedoresList.length > 0 ? fornecedoresList[0].id : null;
+        
+        setEditingMaterial({ ...response.data, fornecedorId });
         setIsEditModalOpen(true);
       } else {
         toast.error('Material não encontrado.');
@@ -103,8 +130,34 @@ const Materiais = () => {
   const updateMaterial = async (materialData) => {
     if (!editingMaterial) return;
     try {
-      const response = await api.put(`/materiais/material/${editingMaterial.id}`, materialData);
+      // Extract fornecedorId from materialData
+      const fornecedorId = materialData.fornecedorId;
+      const oldFornecedorId = editingMaterial.fornecedorId;
+      
+      // Update material without fornecedorId
+      const dataToSend = { ...materialData };
+      delete dataToSend.fornecedorId;
+      
+      const response = await api.put(`/materiais/material/${editingMaterial.id}`, dataToSend);
       if (response.status === 200) {
+        // If fornecedor changed, remove old and add new
+        if (fornecedorId && fornecedorId !== oldFornecedorId) {
+          // Remove old fornecedor
+          if (oldFornecedorId) {
+            try {
+              await api.delete(`/materiais/material/${editingMaterial.id}/fornecedores/${oldFornecedorId}`);
+            } catch {
+              // Fornecedor antigo talvez não exista, continuar
+            }
+          }
+          // Add new fornecedor
+          try {
+            await api.post(`/materiais/material/${editingMaterial.id}/fornecedores`, { fornecedorId });
+          } catch (error) {
+            console.error('Erro ao atualizar fornecedor:', error);
+          }
+        }
+        
         toast.success('Material atualizado com sucesso!');
         setIsEditModalOpen(false);
         setEditingMaterial(null);
@@ -129,6 +182,41 @@ const Materiais = () => {
         value: area.id,
         label: area.nome
       }))
+    },
+    {
+      name: 'fornecedorId',
+      label: 'Fornecedor',
+      type: 'select',
+      required: true,
+      options: fornecedores.map(fornecedor => ({
+        value: fornecedor.id,
+        label: fornecedor.nome
+      }))
+    }
+  ];
+
+  const materialEditFields = [
+    { name: 'nome', label: 'Nome', type: 'text', required: true },
+    { name: 'descricao', label: 'Descrição', type: 'text', required: true },
+    { name: 'unidadeMedida', label: 'Unidade de Medida', type: 'text', required: true },
+    {
+      name: 'areaId',
+      label: 'Área',
+      type: 'select',
+      required: true,
+      options: areas.map(area => ({
+        value: area.id,
+        label: area.nome
+      }))
+    },
+    {
+      name: 'fornecedorId',
+      label: 'Fornecedor',
+      type: 'select',
+      options: fornecedores.map(fornecedor => ({
+        value: fornecedor.id,
+        label: fornecedor.nome
+      }))
     }
   ];
 
@@ -139,6 +227,7 @@ const Materiais = () => {
     { header: 'Descrição', accessor: 'descricao' },
     { header: 'Unidade de Medida', accessor: 'unidadeMedida' },
     { header: 'Área', accessor: 'areaNome' },
+    { header: 'Fornecedores', accessor: 'fornecedores', render: (fornecedores) => (Array.isArray(fornecedores) ? fornecedores.join(', ') : '') },
     {
       header: 'Ações',
       accessor: 'id',
@@ -153,6 +242,7 @@ const Materiais = () => {
 
   useEffect(() => {
     findAllAreas();
+    findAllFornecedores();
     findAll();
   }, []);
 
@@ -171,7 +261,7 @@ const Materiais = () => {
           setEditingMaterial(null);
         }}>
           <Form
-            fields={materialFields}
+              fields={materialEditFields}
             initialValues={editingMaterial}
             onSubmit={updateMaterial}
             submitButtonText="Atualizar"

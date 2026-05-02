@@ -51,15 +51,19 @@ module.exports = {
 
     async create(req, res) {
         try {
-
             const newProject = req.body;
+            const clienteId = Number(newProject.clienteId);
+
+            if (!hasClienteAccess(req, clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para vincular projeto a este cliente." });
+            }
 
             var projeto = {
                 nome: newProject.nome,
                 descricao: newProject.descricao,
                 dataInicio: newProject.dataInicio,
                 dataFim: newProject.dataFim,
-                clienteId: newProject.clienteId,
+                clienteId,
             }
 
             var result = await projetoModel.create(projeto);
@@ -134,6 +138,16 @@ module.exports = {
     async delete(req, res) {
         try {
             const { id } = req.params;
+            const project = await projetoModel.findById(id);
+
+            if (project === -1) {
+                return res.status(404).json({ message: "Projeto não encontrado." });
+            }
+
+            if (!hasClienteAccess(req, project.clienteId)) {
+                return res.status(403).json({ message: "Acesso negado para deletar este projeto." });
+            }
+
             var result = await projetoModel.delete(id);
 
             if (result === 0) {
