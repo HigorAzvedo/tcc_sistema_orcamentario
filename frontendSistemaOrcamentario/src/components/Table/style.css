@@ -120,6 +120,33 @@ tr:nth-child(even) {
   font-style: italic;
 }
 
+.table-pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 4px 0 0;
+}
+
+.pagination-button {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #333;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pagination-info {
+  color: #555;
+  font-size: 14px;
+}
+
 
 .custom-table tr:hover {
   background-color: #f9f9f9;

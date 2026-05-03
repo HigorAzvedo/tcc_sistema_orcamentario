@@ -1,7 +1,7 @@
 // src/components/Table.jsx
 import React, { useMemo, useState } from "react";
 import "./style.css";
-import { FaSearch, FaArrowUp, FaArrowDown } from "react-icons/fa";
+import { FaSearch, FaArrowUp, FaArrowDown, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 function normalizeValue(value) {
   if (value === null || value === undefined) {
@@ -85,10 +85,13 @@ function Table({
   emptyMessage = "Nenhum registro encontrado.",
   sortable = true,
   sortableColumns,
+  pagination = true,
+  pageSize = 8,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState("asc"); // "asc" ou "desc"
+  const [currentPage, setCurrentPage] = useState(1);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -138,6 +141,18 @@ function Table({
     return sorted;
   }, [filteredData, sortColumn, sortDirection, sortable]);
 
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortColumn, sortDirection, data]);
+
+  const totalPages = Math.max(1, Math.ceil((sortedData || []).length / (pagination ? pageSize : Infinity)));
+
+  const paginatedData = useMemo(() => {
+    if (!pagination) return sortedData;
+    const start = (currentPage - 1) * pageSize;
+    return sortedData.slice(start, start + pageSize);
+  }, [sortedData, currentPage, pageSize, pagination]);
+
   const handleHeaderClick = (accessor) => {
     if (!sortable || !columnsSortable.includes(accessor)) {
       return;
@@ -181,7 +196,7 @@ function Table({
               onChange={(e) => setSearchTerm(e.target.value)}
               aria-label="Pesquisar registros da tabela"
             />
-            <FaSearch className="table-search-icon"/>
+            <FaSearch className="table-search-icon" />
           </div>
         </div>
       )}
@@ -208,8 +223,8 @@ function Table({
             </tr>
           </thead>
           <tbody>
-            {sortedData.length > 0 ? (
-              sortedData.map((row, i) => (
+            {paginatedData.length > 0 ? (
+              paginatedData.map((row, i) => (
                 <tr key={i}>
                   {columns.map((col, index) => (
                     <td key={index}>
@@ -228,10 +243,30 @@ function Table({
           </tbody>
         </table>
       </div>
+      {pagination && totalPages > 1 && (
+        <div className="table-pagination">
+          <button
+            className="pagination-button"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <FaArrowLeft />
+          </button>
+
+          <div className="pagination-info">Página {currentPage} de {totalPages}</div>
+
+          <button
+            className="pagination-button"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <FaArrowRight />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
 export default Table;
 
-    
