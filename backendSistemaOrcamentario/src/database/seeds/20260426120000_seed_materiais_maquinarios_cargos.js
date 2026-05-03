@@ -45,7 +45,6 @@ exports.seed = async function(knex) {
     if (!exists) {
       await knex("Cargos").insert({
         nome: cargo.nome,
-        salario: cargo.salario,
         areaId
       });
     }
@@ -156,8 +155,7 @@ exports.seed = async function(knex) {
 
     const payload = {
       nome: maquina.nome,
-      descricao: maquina.descricao,
-      valor: maquina.valor
+      descricao: maquina.descricao
     };
 
     if (hasMaquinarioAreaId) {

@@ -44,7 +44,6 @@ module.exports = {
             const machine = {
                 nome: allMachineData.nome,
                 descricao: allMachineData.descricao,
-                valor: allMachineData.valor,
             }
 
             const result = await maquinarioModel.createWithFornecedores(machine, fornecedorIds);
@@ -68,7 +67,6 @@ module.exports = {
                 id: id,
                 nome: allMachineData.nome,
                 descricao: allMachineData.descricao,
-                valor: allMachineData.valor,
             }
             const result = await maquinarioModel.update(machine);
 

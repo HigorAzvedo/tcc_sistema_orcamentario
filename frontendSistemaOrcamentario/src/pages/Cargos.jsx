@@ -61,7 +61,7 @@ const Cargos = () => {
   const createCargo = async (cargoData) => {
     try {
       const payload = {
-        ...cargoData,
+        nome: cargoData.nome,
         areaId: parseInt(cargoData.areaId, 10),
       };
 
@@ -121,7 +121,7 @@ const Cargos = () => {
       }
 
       const payload = {
-        ...cargoData,
+        nome: cargoData.nome,
         areaId: parseInt(cargoData.areaId, 10),
       };
 
@@ -140,7 +140,6 @@ const Cargos = () => {
 
   const cargoFields = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
-    { name: 'salario', label: 'Salario', type: 'text', required: true },
     {
       name: 'areaId',
       label: 'Área',
@@ -156,7 +155,6 @@ const Cargos = () => {
 
   const columns = [
     { header: "Nome", accessor: "nome" },
-    { header: "Salário", accessor: "salario" },
     { header: "Área", accessor: "areaNome" },
     {
       header: "Ações",

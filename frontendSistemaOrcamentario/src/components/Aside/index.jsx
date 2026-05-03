@@ -58,13 +58,12 @@ const Aside = ({ isCollapsed = false, onNavigate = () => { } }) => {
 
           {/*  {!isUserRole && !isOrcamentistaRole && renderMenuItem('/itens-orcamentos', <FaItunes />, 'Itens Orçamentos')}*/}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/clientes', <FaUsers />, 'Clientes')}
-          {/* {!isUserRole && !isOrcamentistaRole && <li><Link to="/produtos" className={isActive('/produtos') ? 'active' : ''}><FaBoxOpen /> Produtos</Link></li>} */}
+          {isAdminOrManager && renderMenuItem('/orcamentistas', <FaUserTie />, 'Orçamentistas')}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/fornecedores', <FaTruck />, 'Fornecedores')}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/materiais', <FaBoxes />, 'Materiais')}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/maquinario', <FaTools />, 'Equipamentos')}
-          {isAdminOrManager && renderMenuItem('/orcamentistas', <FaUserTie />, 'Orçamentistas')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/areas', <FaChartArea />, 'Áreas')}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/cargos', <FaIdBadge />, 'Cargos')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/areas', <FaChartArea />, 'Áreas')}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/relatorios', <FaChartBar />, 'Relatórios')}
           {renderMenuItem('/configuracoes', <FaCogs />, 'Configurações')}
         </ul>

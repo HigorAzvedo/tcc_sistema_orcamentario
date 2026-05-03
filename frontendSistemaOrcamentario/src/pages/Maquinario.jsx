@@ -64,7 +64,6 @@ const Maquinario = () => {
       const response = await api.post('/maquinarios/maquinario', {
         nome: machineData.nome,
         descricao: machineData.descricao,
-        valor: parseFloat(machineData.valor),
         fornecedorId: parseInt(machineData.fornecedorId, 10)
       });
       if (response.status === 201) {
@@ -128,8 +127,7 @@ const Maquinario = () => {
       // Update machine without fornecedorId
       const dataToSend = {
         nome: machineData.nome,
-        descricao: machineData.descricao,
-        valor: parseFloat(machineData.valor)
+        descricao: machineData.descricao
       };
       
       const response = await api.put(`/maquinarios/maquinario/${editingMachine.id}`, dataToSend);
@@ -166,7 +164,6 @@ const Maquinario = () => {
   const machineFields = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'descricao', label: 'Descrição', type: 'text', required: true },
-    { name: 'valor', label: 'Valor', type: 'number', required: true, step: '0.01' },
     {
       name: 'fornecedorId',
       label: 'Fornecedor',
@@ -185,7 +182,6 @@ const Maquinario = () => {
   const machineEditFields = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'descricao', label: 'Descrição', type: 'text', required: true },
-    { name: 'valor', label: 'Valor', type: 'number', required: true, step: '0.01' },
     {
       name: 'fornecedorId',
       label: 'Fornecedor',
@@ -203,10 +199,6 @@ const Maquinario = () => {
   const columns = [
     { header: "Nome", accessor: "nome" },
     { header: "Descrição", accessor: "descricao" },
-    {
-      header: "Valor",
-      accessor: "valor"
-    },
     { header: 'Fornecedores', accessor: 'fornecedores', render: (fornecedores) => (Array.isArray(fornecedores) ? fornecedores.join(', ') : '') },
     {
       header: "Ações",

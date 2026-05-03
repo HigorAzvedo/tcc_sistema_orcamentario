@@ -32,7 +32,6 @@ module.exports = {
 
             const occupation = {
                 nome: allOccupationData.nome,
-                salario: allOccupationData.salario,
                 areaId: allOccupationData.areaId,
             }
             const result = await cargoModel.create(occupation);
@@ -59,7 +58,6 @@ module.exports = {
             const occupation = {
                 id: id,
                 nome: allOccupationData.nome,
-                salario: allOccupationData.salario,
                 areaId: allOccupationData.areaId,
             }
 
