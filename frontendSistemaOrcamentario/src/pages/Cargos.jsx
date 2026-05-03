@@ -141,12 +141,20 @@ const Cargos = () => {
   const cargoFields = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'salario', label: 'Salario', type: 'text', required: true },
-    { name: 'areaId', label: 'Área', type: 'select', required: true, options: areas },
+    {
+      name: 'areaId',
+      label: 'Área',
+      type: 'searchSelect',
+      required: true,
+      options: areas,
+      placeholder: 'Selecione uma área',
+      searchPlaceholder: 'Buscar área...',
+      emptyMessage: 'Nenhuma área encontrada.'
+    },
 
   ];
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
     { header: "Salário", accessor: "salario" },
     { header: "Área", accessor: "areaNome" },

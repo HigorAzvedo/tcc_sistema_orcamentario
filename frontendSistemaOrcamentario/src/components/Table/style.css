@@ -9,15 +9,30 @@ h1 {
 
 .table-search-container {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   margin-bottom: 12px;
 }
 
-.table-search-input {
+.table-search-position{
+  position: relative;
   width: min(100%, 320px);
+}
+
+.table-search-icon{
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  pointer-events: none;
+  font-size: 14px;
+}
+
+.table-search-input {
+  width: 100%;
   border: 1px solid #d9d9d9;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 36px;
   font-size: 14px;
   color: #333;
   outline: none;

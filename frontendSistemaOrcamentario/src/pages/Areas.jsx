@@ -110,7 +110,6 @@ const Areas = () => {
   ];
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
      {
           header: "Ações",

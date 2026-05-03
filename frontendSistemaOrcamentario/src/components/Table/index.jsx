@@ -1,6 +1,7 @@
 // src/components/Table.jsx
 import React, { useMemo, useState } from "react";
 import "./style.css";
+import { FaSearch, FaSearchMinus } from "react-icons/fa";
 
 function normalizeValue(value) {
   if (value === null || value === undefined) {
@@ -26,7 +27,7 @@ function Table({
   columns,
   data,
   searchable = true,
-  searchPlaceholder = "Pesquisar na tabela...",
+  searchPlaceholder = "Pesquisar na tabela",
   searchableColumns,
   emptyMessage = "Nenhum registro encontrado.",
 }) {
@@ -59,14 +60,17 @@ function Table({
     <div className="table-wrapper">
       {searchable && (
         <div className="table-search-container">
-          <input
-            type="search"
-            className="table-search-input"
-            placeholder={searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            aria-label="Pesquisar registros da tabela"
-          />
+          <div className="table-search-position">
+            <input
+              type="search"
+              className="table-search-input"
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Pesquisar registros da tabela"
+            />
+            <FaSearch className="table-search-icon"/>
+          </div>
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FilterableSelect from '../FilterableSelect';
 import './style.css';
 
 const Form = ({ fields, onSubmit, initialValues = {}, submitButtonText = 'Salvar' }) => {
@@ -35,6 +36,16 @@ const Form = ({ fields, onSubmit, initialValues = {}, submitButtonText = 'Salvar
                 </option>
               ))}
             </select>
+          ) : field.type === 'searchSelect' ? (
+            <FilterableSelect
+              value={values[field.name] || ''}
+              onChange={(value) => setValues({ ...values, [field.name]: value })}
+              options={field.options || []}
+              placeholder={field.placeholder || 'Selecione'}
+              searchPlaceholder={field.searchPlaceholder || 'Buscar...'}
+              emptyMessage={field.emptyMessage || 'Nenhuma opcao encontrada.'}
+              disabled={field.disabled}
+            />
           ) : (
             <input
               id={field.name}

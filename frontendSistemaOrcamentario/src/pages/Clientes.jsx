@@ -190,7 +190,6 @@ const Clientes = () => {
   ];
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
     { header: "E-mail", accessor: "email" },
     { header: "Cpf/Cnpj", accessor: "cpfCnpj" },

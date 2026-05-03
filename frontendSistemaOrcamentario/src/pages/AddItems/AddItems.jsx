@@ -4,6 +4,7 @@ import { FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import api from '../../service/api';
 import Table from '../../components/Table';
+import FilterableSelect from '../../components/FilterableSelect';
 import './AddItems.css';
 
 const itemTabs = [
@@ -284,48 +285,42 @@ const AddItems = () => {
           {activeTab === 'material' && (
             <div className="form-group full-width">
               <label>Material</label>
-              <select
+              <FilterableSelect
                 value={materialSelecionado}
-                onChange={(e) => setMaterialSelecionado(e.target.value)}
-                className="form-input"
-              >
-                <option value="">Selecione um material</option>
-                {materiais.map(material => (
-                  <option key={material.value} value={material.value}>{material.label}</option>
-                ))}
-              </select>
+                onChange={setMaterialSelecionado}
+                options={materiais}
+                placeholder="Selecione um material"
+                searchPlaceholder="Buscar material..."
+                emptyMessage="Nenhum material encontrado."
+              />
             </div>
           )}
 
           {activeTab === 'cargo' && (
             <div className="form-group full-width">
               <label>Cargo</label>
-              <select
+              <FilterableSelect
                 value={cargoSelecionado}
-                onChange={(e) => setCargoSelecionado(e.target.value)}
-                className="form-input"
-              >
-                <option value="">Selecione um cargo</option>
-                {cargos.map(cargo => (
-                  <option key={cargo.value} value={cargo.value}>{cargo.label}</option>
-                ))}
-              </select>
+                onChange={setCargoSelecionado}
+                options={cargos}
+                placeholder="Selecione um cargo"
+                searchPlaceholder="Buscar cargo..."
+                emptyMessage="Nenhum cargo encontrado."
+              />
             </div>
           )}
 
           {activeTab === 'maquinario' && (
             <div className="form-group full-width">
               <label>Maquinário</label>
-              <select
+              <FilterableSelect
                 value={maquinarioSelecionado}
-                onChange={(e) => setMaquinarioSelecionado(e.target.value)}
-                className="form-input"
-              >
-                <option value="">Selecione um maquinário</option>
-                {maquinarios.map(maquinario => (
-                  <option key={maquinario.value} value={maquinario.value}>{maquinario.label}</option>
-                ))}
-              </select>
+                onChange={setMaquinarioSelecionado}
+                options={maquinarios}
+                placeholder="Selecione um maquinário"
+                searchPlaceholder="Buscar maquinário..."
+                emptyMessage="Nenhum maquinário encontrado."
+              />
             </div>
           )}
         </div>

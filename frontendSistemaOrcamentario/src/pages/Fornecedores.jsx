@@ -114,7 +114,6 @@ const Fornecedores = () => {
   ];
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
     { header: "E-mail", accessor: "email" },
     { header: "Cnpj", accessor: "cnpj" },

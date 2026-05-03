@@ -52,7 +52,6 @@ const Materiais = () => {
         toast.info('Nenhum material encontrado.');
         return;
       }
-      // fetch fornecedores for each material and attach
       const materiaisComFornecedores = await Promise.all(response.data.map(async (m) => {
         try {
           const resp = await api.get(`/materiais/material/${m.id}/fornecedores`);
@@ -186,12 +185,15 @@ const Materiais = () => {
     {
       name: 'fornecedorId',
       label: 'Fornecedor',
-      type: 'select',
+      type: 'searchSelect',
       required: true,
       options: fornecedores.map(fornecedor => ({
         value: fornecedor.id,
         label: fornecedor.nome
-      }))
+      })),
+      placeholder: 'Selecione um fornecedor',
+      searchPlaceholder: 'Buscar fornecedor...',
+      emptyMessage: 'Nenhum fornecedor encontrado.'
     }
   ];
 
@@ -212,17 +214,19 @@ const Materiais = () => {
     {
       name: 'fornecedorId',
       label: 'Fornecedor',
-      type: 'select',
+      type: 'searchSelect',
       options: fornecedores.map(fornecedor => ({
         value: fornecedor.id,
         label: fornecedor.nome
-      }))
+      })),
+      placeholder: 'Selecione um fornecedor',
+      searchPlaceholder: 'Buscar fornecedor...',
+      emptyMessage: 'Nenhum fornecedor encontrado.'
     }
   ];
 
 
   const columns = [
-    { header: 'ID', accessor: 'id' },
     { header: 'Nome', accessor: 'nome' },
     { header: 'Descrição', accessor: 'descricao' },
     { header: 'Unidade de Medida', accessor: 'unidadeMedida' },

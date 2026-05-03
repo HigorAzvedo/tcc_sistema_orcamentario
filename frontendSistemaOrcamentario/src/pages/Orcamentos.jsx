@@ -188,14 +188,16 @@ const Orcamentos = () => {
     {
       name: 'projetoId',
       label: 'Projeto',
-      type: 'select',
+      type: 'searchSelect',
       required: true,
-      options: projetos
+      options: projetos,
+      placeholder: 'Selecione um projeto',
+      searchPlaceholder: 'Buscar projeto...',
+      emptyMessage: 'Nenhum projeto encontrado.'
     }
   ];
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
     {
       header: "Projeto",

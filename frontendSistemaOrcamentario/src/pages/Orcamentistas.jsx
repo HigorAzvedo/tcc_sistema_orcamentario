@@ -148,7 +148,6 @@ const Orcamentistas = () => {
   ]
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
     { header: "Email", accessor: "email" },
     { header: "Matricula", accessor: "matricula" },

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Table from '../components/Table';
 import Modal from '../components/Modal';
 import Form from '../components/Form';
@@ -25,7 +25,7 @@ const Projetos = () => {
   const { user } = useContext(AuthContext);
   const isUserRole = user?.role === 'user';
 
-  const findAllClientes = async () => {
+  const findAllClientes = useCallback(async () => {
     try {
       let response;
       if (user?.role === 'orcamentista') {
@@ -49,7 +49,7 @@ const Projetos = () => {
       console.error('Erro ao buscar clientes:', error);
       toast.error('Erro ao buscar clientes.');
     }
-  };
+  }, [user?.role]);
 
   const findAll = async () => {
     setLoading(true);
@@ -159,17 +159,19 @@ const Projetos = () => {
     {
       name: 'clienteId',
       label: 'Cliente',
-      type: 'select',
+      type: 'searchSelect',
       required: true,
       options: clientes.map(cliente => ({
         value: cliente.id,
         label: cliente.nome
-      }))
+      })),
+      placeholder: 'Selecione um cliente',
+      searchPlaceholder: 'Buscar cliente...',
+      emptyMessage: 'Nenhum cliente encontrado.'
     }
   ];
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
     { header: "Descrição", accessor: "descricao" },
     { header: "Cliente", accessor: "nomeCliente" },
@@ -192,7 +194,7 @@ const Projetos = () => {
   useEffect(() => {
     findAllClientes();
     findAll();
-  }, []);
+  }, [findAllClientes]);
 
   return (
     <>

@@ -170,12 +170,15 @@ const Maquinario = () => {
     {
       name: 'fornecedorId',
       label: 'Fornecedor',
-      type: 'select',
+      type: 'searchSelect',
       required: true,
       options: fornecedores.map(fornecedor => ({
         value: fornecedor.id,
         label: fornecedor.nome
-      }))
+      })),
+      placeholder: 'Selecione um fornecedor',
+      searchPlaceholder: 'Buscar fornecedor...',
+      emptyMessage: 'Nenhum fornecedor encontrado.'
     }
   ];
 
@@ -186,16 +189,18 @@ const Maquinario = () => {
     {
       name: 'fornecedorId',
       label: 'Fornecedor',
-      type: 'select',
+      type: 'searchSelect',
       options: fornecedores.map(fornecedor => ({
         value: fornecedor.id,
         label: fornecedor.nome
-      }))
+      })),
+      placeholder: 'Selecione um fornecedor',
+      searchPlaceholder: 'Buscar fornecedor...',
+      emptyMessage: 'Nenhum fornecedor encontrado.'
     }
   ];
 
   const columns = [
-    { header: "ID", accessor: "id" },
     { header: "Nome", accessor: "nome" },
     { header: "Descrição", accessor: "descricao" },
     {

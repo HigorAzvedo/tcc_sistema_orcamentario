@@ -470,7 +470,6 @@ const ItensOrcamentos = () => {
   };
 
   const columns = [
-    { header: "ID", accessor: "id" },
     {
       header: "Projeto",
       accessor: "projeto",
