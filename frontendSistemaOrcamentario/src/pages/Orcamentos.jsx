@@ -21,6 +21,7 @@ const Orcamentos = () => {
   const [projetos, setProjetos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openExportMenuId, setOpenExportMenuId] = useState(null);
+  const [exportMenuPosition, setExportMenuPosition] = useState({ left: 0, top: 0 });
   const { confirmAction, confirmDialog } = useConfirmAction();
 
 
@@ -252,12 +253,29 @@ const Orcamentos = () => {
             <button
               title='Exportar orçamento'
               className="btn-export"
-              onClick={() => setOpenExportMenuId(openExportMenuId === id ? null : id)}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const menuWidth = 160;
+                const margin = 8;
+                let left = rect.right - menuWidth;
+                if (left < margin) left = rect.left;
+                if (left + menuWidth > window.innerWidth - margin) left = window.innerWidth - menuWidth - margin;
+                let top = rect.bottom + 6;
+                const estimatedMenuHeight = 100;
+                if (top + estimatedMenuHeight > window.innerHeight - margin) {
+                  top = rect.top - estimatedMenuHeight - 6;
+                }
+                setExportMenuPosition({ left, top });
+                setOpenExportMenuId(openExportMenuId === id ? null : id);
+              }}
             >
               <FaFileUpload />
             </button>
             {openExportMenuId === id && (
-              <div className="export-tooltip-menu">
+              <div
+                className="export-tooltip-menu"
+                style={{ position: 'fixed', left: exportMenuPosition.left, top: exportMenuPosition.top, zIndex: 9999 }}
+              >
                 <button
                   className="export-option"
                   onClick={() => downloadBudget(id, row.nome, 'pdf')}
