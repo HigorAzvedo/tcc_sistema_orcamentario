@@ -86,11 +86,11 @@ function Table({
   sortable = true,
   sortableColumns,
   pagination = true,
-  pageSize = 8,
+  pageSize = 15
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState("asc"); // "asc" ou "desc"
+  const [sortDirection, setSortDirection] = useState("asc"); 
   const [currentPage, setCurrentPage] = useState(1);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();

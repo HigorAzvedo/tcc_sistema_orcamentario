@@ -31,7 +31,6 @@ const Areas = () => {
         return;
       }
       setArea(response.data);
-      toast.success('Áreas carregadas com sucesso!');
     } catch (error) {
       console.error('Erro ao buscar áreas:', error);
       toast.error('Erro ao buscar áreas.');
