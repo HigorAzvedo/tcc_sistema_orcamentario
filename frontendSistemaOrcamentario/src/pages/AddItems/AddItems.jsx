@@ -1,17 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaTrash } from 'react-icons/fa';
+import { FaArrowLeft, FaLayerGroup, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import api from '../../service/api';
 import Table from '../../components/Table';
-import FilterableSelect from '../../components/FilterableSelect';
 import './AddItems.css';
+import api from '../../service/api';
+import FilterableSelect from '../../components/FilterableSelect';
+import BatchAddItemsModal from './BatchAddItemsModal';
 
 const itemTabs = [
   { key: 'material', label: 'Material' },
   { key: 'cargo', label: 'Cargo' },
   { key: 'maquinario', label: 'Maquinário' }
 ];
+
+const parsePositiveNumber = (value) => {
+  const parsed = Number(String(value).replace(',', '.'));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
 
 const AddItems = () => {
   const navigate = useNavigate();
@@ -36,6 +42,7 @@ const AddItems = () => {
   const [cargoSelecionado, setCargoSelecionado] = useState('');
   const [maquinarioSelecionado, setMaquinarioSelecionado] = useState('');
   const [activeTab, setActiveTab] = useState('material');
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
   const loadOptions = useCallback(async () => {
     try {
@@ -179,9 +186,46 @@ const AddItems = () => {
     toast.success('Item adicionado à lista!');
   };
 
+  const abrirModalLote = () => {
+    if (!projetoSelecionado) {
+      toast.warning('Selecione um projeto antes de adicionar itens em lote!');
+      return;
+    }
+
+    setIsBatchModalOpen(true);
+  };
+
+  const adicionarItensEmLote = (novosItens) => {
+    setItensAdicionados((itensAtuais) => [...itensAtuais, ...novosItens]);
+    setIsBatchModalOpen(false);
+    toast.success(`${novosItens.length} ${novosItens.length === 1 ? 'item adicionado' : 'itens adicionados'} à lista!`);
+  };
+
   const removerItem = (id) => {
     setItensAdicionados(itensAdicionados.filter(item => item.id !== id));
     toast.info('Item removido da lista!');
+  };
+
+  const atualizarCampoItem = (id, field, value) => {
+    setItensAdicionados((itensAtuais) =>
+      itensAtuais.map((item) => {
+        if (item.id !== id) {
+          return item;
+        }
+
+        const itemAtualizado = {
+          ...item,
+          [field]: value,
+        };
+        const quantidadeAtualizada = parsePositiveNumber(itemAtualizado.quantidade);
+        const valorUnitarioAtualizado = parsePositiveNumber(itemAtualizado.valorUnitario);
+
+        return {
+          ...itemAtualizado,
+          valorTotal: quantidadeAtualizada * valorUnitarioAtualizado,
+        };
+      })
+    );
   };
 
   const calcularSubtotal = () => {
@@ -194,11 +238,20 @@ const AddItems = () => {
       return;
     }
 
+    const temItemInvalido = itensAdicionados.some((item) => (
+      parsePositiveNumber(item.quantidade) <= 0 || parsePositiveNumber(item.valorUnitario) <= 0
+    ));
+
+    if (temItemInvalido) {
+      toast.warning('Corrija quantidade e valor unitário dos itens antes de salvar!');
+      return;
+    }
+
     try {
       const promises = itensAdicionados.map(item => {
         const dados = {
-          valorUnitario: item.valorUnitario,
-          quantidade: item.quantidade,
+          valorUnitario: parsePositiveNumber(item.valorUnitario),
+          quantidade: parsePositiveNumber(item.quantidade),
           idProjeto: item.idProjeto,
           idOrcamento: item.idOrcamento,
           idMaterial: item.idMaterial,
@@ -226,8 +279,36 @@ const AddItems = () => {
     { header: 'Tipo', accessor: 'tipoItemLabel' },
     { header: 'Item', accessor: 'itemNome', render: (value) => value || 'N/A' },
     { header: 'Descrição', accessor: 'descricao', render: (value) => value.length > 0 ? value : 'N/A' },
-    { header: 'Qtd.', accessor: 'quantidade', render: (value) => value.toFixed(2) },
-    { header: 'Valor Unit.', accessor: 'valorUnitario', render: (value) => `R$ ${value.toFixed(2)}` },
+    {
+      header: 'Qtd.',
+      accessor: 'quantidade',
+      render: (value, row) => (
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={value}
+          onChange={(event) => atualizarCampoItem(row.id, 'quantidade', event.target.value)}
+          className={`table-edit-input ${parsePositiveNumber(value) <= 0 ? 'invalid' : ''}`}
+          aria-label={`Quantidade de ${row.itemNome || 'item'}`}
+        />
+      )
+    },
+    {
+      header: 'Valor Unit.',
+      accessor: 'valorUnitario',
+      render: (value, row) => (
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={value}
+          onChange={(event) => atualizarCampoItem(row.id, 'valorUnitario', event.target.value)}
+          className={`table-edit-input ${parsePositiveNumber(value) <= 0 ? 'invalid' : ''}`}
+          aria-label={`Valor unitário de ${row.itemNome || 'item'}`}
+        />
+      )
+    },
     { header: 'Valor Total', accessor: 'valorTotal', render: (value) => `R$ ${value.toFixed(2)}` },
     {
       header: 'Ações',
@@ -247,6 +328,9 @@ const AddItems = () => {
   return (
     <div className="add-items-container">
       <div className="add-items-header">
+        <button onClick={() => navigate('/orcamentos')} className="btn-back">
+          <FaArrowLeft /> Voltar
+        </button>
         <h2>Adicionar Itens ao Orçamento: <span className="orcamento-nome">{orcamentoNome || 'Selecione um Orçamento'}</span></h2>
       </div>
 
@@ -375,7 +459,10 @@ const AddItems = () => {
           </div>
         </div>
 
-        <div className="form-row button-right">
+        <div className="form-row button-right add-items-actions">
+          <button type="button" onClick={abrirModalLote} className="btn-adicionar-lote">
+            <FaLayerGroup /> Adicionar vários itens
+          </button>
           <button onClick={adicionarItem} className="btn-adicionar-item">
             Adicionar Item
           </button>
@@ -384,8 +471,8 @@ const AddItems = () => {
       </div>
 
       <div className="tabela-container">
-        <Table 
-          columns={columns} 
+        <Table
+          columns={columns}
           data={itensAdicionados}
           searchable={false}
           emptyMessage="Nenhum item adicionado ainda."
@@ -405,6 +492,17 @@ const AddItems = () => {
           </button>
         </div>
       </div>
+
+      <BatchAddItemsModal
+        isOpen={isBatchModalOpen}
+        materiais={materiais}
+        cargos={cargos}
+        maquinarios={maquinarios}
+        projetoSelecionado={projetoSelecionado}
+        orcamentoId={orcamentoId}
+        onClose={() => setIsBatchModalOpen(false)}
+        onConfirm={adicionarItensEmLote}
+      />
     </div>
   );
 };
