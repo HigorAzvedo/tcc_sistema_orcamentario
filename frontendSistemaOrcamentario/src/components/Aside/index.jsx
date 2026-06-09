@@ -53,18 +53,27 @@ const Aside = ({ isCollapsed = false, onNavigate = () => { } }) => {
           {isOrcamentistaRole && renderMenuItem('/dashboard-orcamentista', <FaTachometerAlt />, 'Meu Painel')}
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/dashboard', <FaTachometerAlt />, 'Dashboard')}
 
+          {!isCollapsed && <p>Operação</p>}
+
           {renderMenuItem('/projetos', <FaProjectDiagram />, 'Projetos')}
           {renderMenuItem('/orcamentos', <FaFileInvoiceDollar />, 'Orçamentos')}
+          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/relatorios', <FaChartBar />, 'Relatórios')}
+
+          {!isCollapsed && !isUserRole && <p>Cadastro de Itens</p>}
 
           {/*  {!isUserRole && !isOrcamentistaRole && renderMenuItem('/itens-orcamentos', <FaItunes />, 'Itens Orçamentos')}*/}
+          {!isUserRole && renderMenuItem('/materiais', <FaBoxes />, 'Materiais')}
+          {!isUserRole && renderMenuItem('/maquinario', <FaTools />, 'Equipamentos')}
+          {!isUserRole && renderMenuItem('/cargos', <FaIdBadge />, 'Cargos')}
+          {!isUserRole && renderMenuItem('/fornecedores', <FaTruck />, 'Fornecedores')}
+          {!isUserRole && renderMenuItem('/areas', <FaChartArea />, 'Áreas')}
+
+          {!isCollapsed && !isOrcamentistaRole && !isUserRole && <p>Usuários</p>}
+
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/clientes', <FaUsers />, 'Clientes')}
           {isAdminOrManager && renderMenuItem('/orcamentistas', <FaUserTie />, 'Orçamentistas')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/fornecedores', <FaTruck />, 'Fornecedores')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/materiais', <FaBoxes />, 'Materiais')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/maquinario', <FaTools />, 'Equipamentos')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/cargos', <FaIdBadge />, 'Cargos')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/areas', <FaChartArea />, 'Áreas')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/relatorios', <FaChartBar />, 'Relatórios')}
+
+          {!isCollapsed && <p>Configurações</p>          }
           {renderMenuItem('/configuracoes', <FaCogs />, 'Configurações')}
         </ul>
       </nav>
