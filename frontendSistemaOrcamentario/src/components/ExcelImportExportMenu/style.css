@@ -1,0 +1,43 @@
+.excel-import-export-menu .btn-excel-menu {
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #15803d;
+    padding: 10px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.excel-import-export-menu .btn-excel-menu:hover:not(:disabled) {
+    background-color: #ecfdf5;
+    border-color: #86efac;
+}
+
+.excel-import-export-menu .btn-excel-menu:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.excel-import-export-menu .btn-excel-menu:focus-visible {
+    outline: 2px solid #94a3b8;
+    outline-offset: 2px;
+}
+
+.excel-file-input {
+    display: none;
+}
+
+@media (max-width: 426px) {
+    .excel-import-export-menu .btn-excel-menu-label {
+        display: none;
+    }
+
+    .excel-import-export-menu .btn-excel-menu {
+        padding: 10px 12px;
+    }
+}

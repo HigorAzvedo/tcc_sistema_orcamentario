@@ -5,7 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 
 // import { Container } from './styles';
 
-function HomePage({ titulo, botao, onButtonClick }) {
+function HomePage({ titulo, botao, onButtonClick, children }) {
 
     const { user } = useContext(AuthContext);
 
@@ -15,13 +15,18 @@ function HomePage({ titulo, botao, onButtonClick }) {
             <div className="headerPages">
                 <h1>{titulo}</h1>
                 {
-                    !isUserRole  && (
-                        <button className="btn-novo" onClick={onButtonClick} aria-label={botao}>
-                            <div className="btn-content">
-                                <FaPlus />
-                                <span className="btn-label">{botao}</span>
-                            </div>
-                        </button>
+                    !isUserRole && (
+                        <div className="header-actions">
+                            {children}
+                            {botao && (
+                                <button className="btn-novo" onClick={onButtonClick} aria-label={botao}>
+                                    <div className="btn-content">
+                                        <FaPlus />
+                                        <span className="btn-label">{botao}</span>
+                                    </div>
+                                </button>
+                            )}
+                        </div>
                     )
                 }
             </div>

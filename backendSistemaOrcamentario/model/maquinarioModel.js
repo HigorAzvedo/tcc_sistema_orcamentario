@@ -1,4 +1,8 @@
 const db = require("../src/database/connection.js");
+const {
+    findDuplicateAmongFornecedores,
+    findMaquinarioDuplicate,
+} = require('../utils/itemDuplicateService');
 
 module.exports = {
     async findAll() {
@@ -36,15 +40,26 @@ module.exports = {
     },
 
     async createWithFornecedores(machine, fornecedorIds) {
+        const fornecedoresNormalizados = Array.isArray(fornecedorIds)
+            ? [...new Set(fornecedorIds.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))]
+            : [];
+
+        const duplicate = await findDuplicateAmongFornecedores(
+            db,
+            'maquinario',
+            machine.nome,
+            fornecedoresNormalizados
+        );
+
+        if (duplicate) {
+            return 'ITEM_EXISTS';
+        }
+
         const trx = await db.transaction();
 
         try {
             const machineResult = await trx("Maquinarios").insert(machine).returning('id');
             const maquinarioId = Array.isArray(machineResult) ? machineResult[0].id : machineResult.id;
-
-            const fornecedoresNormalizados = Array.isArray(fornecedorIds)
-                ? [...new Set(fornecedorIds.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))]
-                : [];
 
             for (const fornecedorId of fornecedoresNormalizados) {
                 const existingAssociation = await trx('FornecedorMaquinario')
@@ -66,6 +81,26 @@ module.exports = {
     },
     async update(machine) {
         try {
+            const fornecedores = await db('FornecedorMaquinario')
+                .where({ maquinarioId: machine.id })
+                .select('fornecedorId');
+
+            const fornecedorIds = fornecedores.map((item) => item.fornecedorId);
+
+            if (fornecedorIds.length > 0) {
+                const duplicate = await findDuplicateAmongFornecedores(
+                    db,
+                    'maquinario',
+                    machine.nome,
+                    fornecedorIds,
+                    machine.id
+                );
+
+                if (duplicate) {
+                    return 'ITEM_EXISTS';
+                }
+            }
+
             const result = await db("Maquinarios").where({ id: machine.id }).update(machine);
             return result;
         } catch (error) {
@@ -99,11 +134,25 @@ module.exports = {
 
     async addFornecedor(maquinarioId, fornecedorId) {
         try {
+            const maquinario = await db('Maquinarios').where({ id: maquinarioId }).first();
+
+            if (!maquinario) {
+                return 0;
+            }
+
             const association = { maquinarioId, fornecedorId };
             const existingAssociation = await db('FornecedorMaquinario').where(association).first();
+
             if (existingAssociation) {
                 return "ASSOCIATION_EXISTS";
             }
+
+            const duplicate = await findMaquinarioDuplicate(db, maquinario.nome, fornecedorId, maquinarioId);
+
+            if (duplicate) {
+                return 'ITEM_EXISTS';
+            }
+
             return await db('FornecedorMaquinario').insert(association);
         } catch (error) {
             console.log(error);

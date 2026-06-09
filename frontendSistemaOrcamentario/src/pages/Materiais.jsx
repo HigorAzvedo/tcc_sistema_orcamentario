@@ -6,6 +6,7 @@ import Loading from '../components/Loading';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import './Pages.css';
 import HomePage from '../components/HomePage';
+import ExcelImportExportMenu from '../components/ExcelImportExportMenu';
 import api from '../service/api';
 import { toast } from 'react-toastify';
 import useConfirmAction from '../hooks/useConfirmAction';
@@ -21,7 +22,7 @@ const Materiais = () => {
   const [areas, setAreas] = useState([]);
   const [fornecedores, setFornecedores] = useState([]);
 
-    const findAllAreas = async () => {
+  const findAllAreas = async () => {
     try {
       const response = await api.get('/areas');
       setAreas(response.data || []);
@@ -41,7 +42,7 @@ const Materiais = () => {
     }
   };
 
-  
+
 
   const findAll = async () => {
     setLoading(true);
@@ -80,8 +81,7 @@ const Materiais = () => {
         findAll();
       }
     } catch (error) {
-      console.error('Erro ao criar material:', error);
-      toast.error('Erro ao criar material.');
+      toast.error(error.response.data.message);
     }
   };
 
@@ -114,7 +114,7 @@ const Materiais = () => {
         const fornecedoresResponse = await api.get(`/materiais/material/${id}/fornecedores`);
         const fornecedoresList = Array.isArray(fornecedoresResponse.data) ? fornecedoresResponse.data : [];
         const fornecedorId = fornecedoresList.length > 0 ? fornecedoresList[0].id : null;
-        
+
         setEditingMaterial({ ...response.data, fornecedorId });
         setIsEditModalOpen(true);
       } else {
@@ -129,19 +129,15 @@ const Materiais = () => {
   const updateMaterial = async (materialData) => {
     if (!editingMaterial) return;
     try {
-      // Extract fornecedorId from materialData
       const fornecedorId = materialData.fornecedorId;
       const oldFornecedorId = editingMaterial.fornecedorId;
-      
-      // Update material without fornecedorId
+
       const dataToSend = { ...materialData };
       delete dataToSend.fornecedorId;
-      
+
       const response = await api.put(`/materiais/material/${editingMaterial.id}`, dataToSend);
       if (response.status === 200) {
-        // If fornecedor changed, remove old and add new
         if (fornecedorId && fornecedorId !== oldFornecedorId) {
-          // Remove old fornecedor
           if (oldFornecedorId) {
             try {
               await api.delete(`/materiais/material/${editingMaterial.id}/fornecedores/${oldFornecedorId}`);
@@ -149,14 +145,13 @@ const Materiais = () => {
               // Fornecedor antigo talvez não exista, continuar
             }
           }
-          // Add new fornecedor
           try {
             await api.post(`/materiais/material/${editingMaterial.id}/fornecedores`, { fornecedorId });
           } catch (error) {
             console.error('Erro ao atualizar fornecedor:', error);
           }
         }
-        
+
         toast.success('Material atualizado com sucesso!');
         setIsEditModalOpen(false);
         setEditingMaterial(null);
@@ -252,7 +247,23 @@ const Materiais = () => {
 
   return (
     <>
-      <HomePage titulo="Materiais" botao="Novo Material" onButtonClick={() => setIsModalOpen(true)} />
+      <HomePage titulo="Materiais" botao="Novo Material" onButtonClick={() => setIsModalOpen(true)}>
+        <ExcelImportExportMenu
+          templateUrl="/materiais/export/template"
+          importUrl="/materiais/import"
+          fileName="modelo-materiais"
+          onImportSuccess={findAll}
+          extraDownloadOptions={[
+            {
+              label: 'Baixar materiais',
+              url: '/materiais/export/list',
+              fileName: 'materiais-cadastrados',
+            },
+
+          ]}
+
+        />
+      </HomePage>
       {loading ? <Loading /> : <Table columns={columns} data={materiais} />}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -265,7 +276,7 @@ const Materiais = () => {
           setEditingMaterial(null);
         }}>
           <Form
-              fields={materialEditFields}
+            fields={materialEditFields}
             initialValues={editingMaterial}
             onSubmit={updateMaterial}
             submitButtonText="Atualizar"

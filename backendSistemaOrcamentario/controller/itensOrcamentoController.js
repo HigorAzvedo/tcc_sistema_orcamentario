@@ -1,5 +1,36 @@
 const itensOrcamentoModel = require('../model/itensOrcamentoModel');
 const db = require('../src/database/connection.js');
+const {
+    buildTemplateBuffer,
+    parseExcelBuffer,
+    sendExcelFile,
+    buildNameMap,
+    getCellValue,
+    normalizeKey,
+} = require('../utils/excelService');
+
+const ITENS_ORCAMENTO_TEMPLATE_COLUMNS = ['Tipo', 'Item', 'Quantidade', 'Valor Unitario'];
+
+const ITEM_TYPE_CONFIG = {
+    material: {
+        label: 'Material',
+        table: 'Materiais',
+        idField: 'idMaterial',
+        aliases: ['material', 'materiais'],
+    },
+    cargo: {
+        label: 'Cargo',
+        table: 'Cargos',
+        idField: 'idCargo',
+        aliases: ['cargo', 'cargos'],
+    },
+    maquinario: {
+        label: 'Maquinario',
+        table: 'Maquinarios',
+        idField: 'idMaquinario',
+        aliases: ['maquinario', 'maquinarios', 'maquina', 'maquinas'],
+    },
+};
 
 const toNullableInt = (value) => {
     if (value === undefined || value === null || value === '') {
@@ -13,6 +44,32 @@ const toNullableInt = (value) => {
 const toNumber = (value) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+};
+
+const toExcelNumber = (value) => {
+    const parsed = Number(String(value ?? '').replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
+const getItemTypeKey = (value) => {
+    const normalizedValue = normalizeKey(value);
+
+    return Object.entries(ITEM_TYPE_CONFIG).find(([, config]) => (
+        config.aliases.includes(normalizedValue)
+    ))?.[0] || null;
+};
+
+const getRowValue = (row, keys) => {
+    const directValue = getCellValue(row, keys);
+
+    if (directValue) {
+        return directValue;
+    }
+
+    const normalizedKeys = keys.map((key) => normalizeKey(key));
+    const matchedKey = Object.keys(row).find((rowKey) => normalizedKeys.includes(normalizeKey(rowKey)));
+
+    return matchedKey ? String(row[matchedKey] ?? '').trim() : '';
 };
 
 const hasExactlyOneSelectedType = (itemBudget) => {
@@ -80,6 +137,145 @@ module.exports = {
         } catch (error) {
             console.log(error);
             res.status(500).json({ error: "Erro ao buscar opções" });
+        }
+    },
+
+    async exportTemplate(req, res) {
+        try {
+            const buffer = buildTemplateBuffer(ITENS_ORCAMENTO_TEMPLATE_COLUMNS, {
+                Tipo: 'material',
+                Item: 'Nome do material cadastrado',
+                Quantidade: 1,
+                'Valor Unitario': 100,
+            });
+
+            return sendExcelFile(res, 'modelo-itens-orcamento.xlsx', buffer);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: 'Erro ao exportar modelo de itens do orcamento.' });
+        }
+    },
+
+    async importPreview(req, res) {
+        try {
+            const { file, idProjeto, idOrcamento } = req.body;
+            const projetoId = toNullableInt(idProjeto);
+            const orcamentoId = toNullableInt(idOrcamento);
+
+            if (!file) {
+                return res.status(400).json({ message: 'Arquivo Excel nao enviado.' });
+            }
+
+            if (!projetoId || !orcamentoId) {
+                return res.status(400).json({ message: 'Projeto e orcamento sao obrigatorios para importar itens.' });
+            }
+
+            const orcamentoComProjeto = await getOrcamentoComProjeto(orcamentoId);
+
+            if (!orcamentoComProjeto) {
+                return res.status(404).json({ message: 'Orcamento nao encontrado.' });
+            }
+
+            if (Number(projetoId) !== Number(orcamentoComProjeto.orcamentoProjetoId)) {
+                return res.status(400).json({ message: 'Projeto informado nao pertence ao orcamento selecionado.' });
+            }
+
+            if (!hasClienteAccess(req, orcamentoComProjeto.clienteId)) {
+                return res.status(403).json({ message: 'Acesso negado para importar itens neste orcamento.' });
+            }
+
+            const buffer = Buffer.from(file, 'base64');
+            const rows = parseExcelBuffer(buffer).filter((row) => {
+                const tipo = getRowValue(row, ['Tipo', 'tipo']);
+                const item = getRowValue(row, ['Item', 'item', 'Nome', 'nome']);
+                const quantidade = getRowValue(row, ['Quantidade', 'quantidade']);
+                const valorUnitario = getRowValue(row, ['Valor Unitario', 'Valor Unitário', 'valorUnitario', 'valor unitario']);
+
+                return tipo || item || quantidade || valorUnitario;
+            });
+
+            if (rows.length === 0) {
+                return res.status(400).json({ message: 'A planilha esta vazia ou nao possui dados validos.' });
+            }
+
+            const recordsByType = {};
+
+            for (const [type, config] of Object.entries(ITEM_TYPE_CONFIG)) {
+                const records = await db(config.table).select('id', 'nome');
+                recordsByType[type] = {
+                    records,
+                    map: buildNameMap(records),
+                };
+            }
+
+            const items = [];
+            const errors = [];
+
+            for (let index = 0; index < rows.length; index += 1) {
+                const row = rows[index];
+                const rowNumber = index + 2;
+                const tipoRaw = getRowValue(row, ['Tipo', 'tipo']);
+                const itemNome = getRowValue(row, ['Item', 'item', 'Nome', 'nome']);
+                const quantidadeRaw = getRowValue(row, ['Quantidade', 'quantidade']);
+                const valorUnitarioRaw = getRowValue(row, ['Valor Unitario', 'Valor Unitário', 'valorUnitario', 'valor unitario']);
+                const tipoItem = getItemTypeKey(tipoRaw);
+                const quantidade = toExcelNumber(quantidadeRaw);
+                const valorUnitario = toExcelNumber(valorUnitarioRaw);
+
+                if (!tipoRaw || !itemNome || !quantidadeRaw || !valorUnitarioRaw) {
+                    errors.push({ row: rowNumber, message: 'Preencha Tipo, Item, Quantidade e Valor Unitario.' });
+                    continue;
+                }
+
+                if (!tipoItem) {
+                    errors.push({ row: rowNumber, message: `Tipo "${tipoRaw}" invalido. Use material, cargo ou maquinario.` });
+                    continue;
+                }
+
+                if (!quantidade || quantidade <= 0 || !valorUnitario || valorUnitario <= 0) {
+                    errors.push({ row: rowNumber, message: 'Quantidade e Valor Unitario devem ser maiores que zero.' });
+                    continue;
+                }
+
+                const config = ITEM_TYPE_CONFIG[tipoItem];
+                const itemId = recordsByType[tipoItem].map.get(normalizeKey(itemNome));
+                const selectedItem = recordsByType[tipoItem].records.find((record) => Number(record.id) === Number(itemId));
+
+                if (!selectedItem) {
+                    errors.push({ row: rowNumber, message: `${config.label} "${itemNome}" nao encontrado.` });
+                    continue;
+                }
+
+                const item = {
+                    id: `${Date.now()}-${index}`,
+                    descricao: '',
+                    unidade: '',
+                    quantidade,
+                    valorUnitario,
+                    valorTotal: quantidade * valorUnitario,
+                    tipoItem,
+                    tipoItemLabel: config.label,
+                    itemNome: selectedItem.nome,
+                    idProjeto: projetoId,
+                    idOrcamento: orcamentoId,
+                    idMaterial: null,
+                    idCargo: null,
+                    idMaquinario: null,
+                };
+
+                item[config.idField] = selectedItem.id;
+                items.push(item);
+            }
+
+            const imported = items.length;
+            const message = imported > 0
+                ? `Importacao concluida: ${imported} item(ns) adicionado(s) a lista.`
+                : 'Nenhum item foi importado.';
+
+            return res.status(200).json({ message, imported, items, errors });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: 'Erro ao importar itens do orcamento.' });
         }
     },
 

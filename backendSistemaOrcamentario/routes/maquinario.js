@@ -4,10 +4,13 @@ const maquinarioController = require('../controller/maquinarioController');
 const { verifyLocalToken, isAdmin, isAdminOrManager } = require('../middleware/authMiddleware');
 
 router.get('/', verifyLocalToken, maquinarioController.findAll);
+router.get('/export/template', verifyLocalToken, isAdminOrManager, maquinarioController.exportTemplate);
+router.get('/export/list', verifyLocalToken, isAdminOrManager, maquinarioController.exportList);
 router.get('/maquinario/:id', verifyLocalToken, maquinarioController.findById);
 router.get('/maquinario/:id/fornecedores', verifyLocalToken, maquinarioController.getFornecedores);
 
 router.post('/maquinario', verifyLocalToken, isAdminOrManager, maquinarioController.create);
+router.post('/import', verifyLocalToken, isAdminOrManager, maquinarioController.importExcel);
 router.post('/maquinario/:id/fornecedores', verifyLocalToken, isAdminOrManager, maquinarioController.addFornecedor);
 
 router.put('/maquinario/:id', verifyLocalToken, isAdminOrManager, maquinarioController.update);

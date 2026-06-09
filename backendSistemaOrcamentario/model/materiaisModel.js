@@ -1,4 +1,8 @@
 const db = require('../src/database/connection.js');
+const {
+    findDuplicateAmongFornecedores,
+    findMaterialDuplicate,
+} = require('../utils/itemDuplicateService');
 
 module.exports = {
 
@@ -39,15 +43,26 @@ module.exports = {
     },
 
     async createWithFornecedores(material, fornecedorIds) {
+        const fornecedoresNormalizados = Array.isArray(fornecedorIds)
+            ? [...new Set(fornecedorIds.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))]
+            : [];
+
+        const duplicate = await findDuplicateAmongFornecedores(
+            db,
+            'material',
+            material.nome,
+            fornecedoresNormalizados
+        );
+
+        if (duplicate) {
+            return 'ITEM_EXISTS';
+        }
+
         const trx = await db.transaction();
 
         try {
             const materialResult = await trx('Materiais').insert(material).returning('id');
             const materialId = Array.isArray(materialResult) ? materialResult[0].id : materialResult.id;
-
-            const fornecedoresNormalizados = Array.isArray(fornecedorIds)
-                ? [...new Set(fornecedorIds.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))]
-                : [];
 
             for (const fornecedorId of fornecedoresNormalizados) {
                 const existingAssociation = await trx('FornecedorMaterial')
@@ -70,6 +85,26 @@ module.exports = {
 
     async update(material) {
         try {
+            const fornecedores = await db('FornecedorMaterial')
+                .where({ materialId: material.id })
+                .select('fornecedorId');
+
+            const fornecedorIds = fornecedores.map((item) => item.fornecedorId);
+
+            if (fornecedorIds.length > 0) {
+                const duplicate = await findDuplicateAmongFornecedores(
+                    db,
+                    'material',
+                    material.nome,
+                    fornecedorIds,
+                    material.id
+                );
+
+                if (duplicate) {
+                    return 'ITEM_EXISTS';
+                }
+            }
+
             const result = await db('Materiais').where({ id: material.id }).update(material);
             return result;
         } catch (error) {
@@ -90,11 +125,25 @@ module.exports = {
 
     async addFornecedor(materialId, fornecedorId) {
         try {
+            const material = await db('Materiais').where({ id: materialId }).first();
+
+            if (!material) {
+                return 0;
+            }
+
             const association = { materialId, fornecedorId };
             const existingAssociation = await db('FornecedorMaterial').where(association).first();
+
             if (existingAssociation) {
                 return "ASSOCIATION_EXISTS";
             }
+
+            const duplicate = await findMaterialDuplicate(db, material.nome, fornecedorId, materialId);
+
+            if (duplicate) {
+                return 'ITEM_EXISTS';
+            }
+
             return await db('FornecedorMaterial').insert(association);
         } catch (error) {
             console.log(error);

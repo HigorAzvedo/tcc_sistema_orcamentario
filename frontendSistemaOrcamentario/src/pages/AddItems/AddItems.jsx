@@ -7,6 +7,7 @@ import './AddItems.css';
 import api from '../../service/api';
 import FilterableSelect from '../../components/FilterableSelect';
 import BatchAddItemsModal from './BatchAddItemsModal';
+import ExcelImportExportMenu from '../../components/ExcelImportExportMenu';
 
 const itemTabs = [
   { key: 'material', label: 'Material' },
@@ -201,6 +202,16 @@ const AddItems = () => {
     toast.success(`${novosItens.length} ${novosItens.length === 1 ? 'item adicionado' : 'itens adicionados'} à lista!`);
   };
 
+  const adicionarItensImportados = (data) => {
+    const novosItens = data?.items || [];
+
+    if (novosItens.length === 0) {
+      return;
+    }
+
+    setItensAdicionados((itensAtuais) => [...itensAtuais, ...novosItens]);
+  };
+
   const removerItem = (id) => {
     setItensAdicionados(itensAdicionados.filter(item => item.id !== id));
     toast.info('Item removido da lista!');
@@ -352,17 +363,54 @@ const AddItems = () => {
           </div>
         </div>
 
-        <div className="item-tabs">
-          {itemTabs.map(tab => (
-            <button
-              key={tab.key}
-              type="button"
-              className={`tab-button ${activeTab === tab.key ? 'active' : ''}`}
-              onClick={() => handleTabChange(tab.key)}
-            >
-              {tab.label}
+        <div className="item-tabs-container">
+          <div className="item-tabs">
+            {itemTabs.map(tab => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`tab-button ${activeTab === tab.key ? 'active' : ''}`}
+                onClick={() => handleTabChange(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="import-export-buttons">
+            <ExcelImportExportMenu
+              templateUrl="/itensOrcamentos/export/template"
+              importUrl="/itensOrcamentos/import/preview"
+              fileName="modelo-itens-orcamento"
+              importPayload={{
+                idProjeto: projetoSelecionado,
+                idOrcamento: orcamentoId,
+              }}
+            templateButtonLabel="Exportar modelo de itens"
+            importButtonLabel="Importar itens"
+            extraDownloadOptions={[
+              {
+                label: 'Baixar materiais',
+                url: '/materiais/export/list',
+                fileName: 'materiais-cadastrados',
+              },
+              {
+                label: 'Baixar cargos',
+                url: '/cargos/export/list',
+                fileName: 'cargos-cadastrados',
+              },
+              {
+                label: 'Baixar maquinários',
+                url: '/maquinarios/export/list',
+                fileName: 'maquinarios-cadastrados',
+              },
+            ]}
+            onImportSuccess={adicionarItensImportados}
+          />
+            <button type="button" onClick={abrirModalLote} className="btn-adicionar-lote">
+              <FaLayerGroup /> Adicionar vários itens
             </button>
-          ))}
+          </div>
         </div>
 
         <div className="form-row">
@@ -460,9 +508,6 @@ const AddItems = () => {
         </div>
 
         <div className="form-row button-right add-items-actions">
-          <button type="button" onClick={abrirModalLote} className="btn-adicionar-lote">
-            <FaLayerGroup /> Adicionar vários itens
-          </button>
           <button onClick={adicionarItem} className="btn-adicionar-item">
             Adicionar Item
           </button>

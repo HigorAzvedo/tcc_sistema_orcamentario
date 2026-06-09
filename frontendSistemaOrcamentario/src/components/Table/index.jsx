@@ -26,19 +26,16 @@ function normalizeValue(value) {
 function parseDate(dateStr) {
   if (!dateStr) return null;
 
-  // Tenta formato DD/MM/YYYY (brasileiro)
   const brFormatMatch = String(dateStr).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (brFormatMatch) {
     return new Date(brFormatMatch[3], brFormatMatch[2] - 1, brFormatMatch[1]);
   }
 
-  // Tenta ISO format (YYYY-MM-DD)
   const isoFormatMatch = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoFormatMatch) {
     return new Date(isoFormatMatch[1], isoFormatMatch[2] - 1, isoFormatMatch[3]);
   }
 
-  // Tenta parse como Date nativo
   const parsed = new Date(dateStr);
   if (!isNaN(parsed.getTime())) {
     return parsed;
@@ -48,7 +45,6 @@ function parseDate(dateStr) {
 }
 
 function compareValues(a, b) {
-  // Trata valores nulos/undefined
   if (a == null && b == null) return 0;
   if (a == null) return 1;
   if (b == null) return -1;
@@ -56,7 +52,6 @@ function compareValues(a, b) {
   const normalizedA = normalizeValue(a).trim();
   const normalizedB = normalizeValue(b).trim();
 
-  // Tenta comparar como datas
   const dateA = parseDate(normalizedA);
   const dateB = parseDate(normalizedB);
 
@@ -64,7 +59,6 @@ function compareValues(a, b) {
     return dateA.getTime() - dateB.getTime();
   }
 
-  // Tenta comparar como números
   const numA = parseFloat(normalizedA);
   const numB = parseFloat(normalizedB);
 
@@ -72,7 +66,6 @@ function compareValues(a, b) {
     return numA - numB;
   }
 
-  // Compara como strings
   return normalizedA.toLowerCase().localeCompare(normalizedB.toLowerCase(), "pt-BR");
 }
 
@@ -86,7 +79,7 @@ function Table({
   sortable = true,
   sortableColumns,
   pagination = true,
-  pageSize = 8,
+  pageSize = 15,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState(null);
@@ -159,10 +152,8 @@ function Table({
     }
 
     if (sortColumn === accessor) {
-      // Inverte direção se clicar na mesma coluna
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // Muda para nova coluna, começa com ascendente
       setSortColumn(accessor);
       setSortDirection("asc");
     }

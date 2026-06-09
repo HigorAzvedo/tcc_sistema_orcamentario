@@ -1,4 +1,5 @@
 const db = require('../src/database/connection.js');
+const { findCargoDuplicate } = require('../utils/itemDuplicateService');
 
 module.exports = {
 
@@ -31,11 +32,9 @@ module.exports = {
 
     async create(cargo) {
         try {
-            const existingCargo = await db('Cargos')
-                .where({ nome: cargo.nome })
-                .first();
+            const duplicate = await findCargoDuplicate(db, cargo.nome, cargo.areaId);
 
-            if (existingCargo) {
+            if (duplicate) {
                 return "CARGO_EXISTS";
             }
 
@@ -49,12 +48,9 @@ module.exports = {
 
     async update(cargo) {
         try {
-            const existingCargo = await db('Cargos')
-                .where({ nome: cargo.nome })
-                .andWhereNot({ id: cargo.id })
-                .first();
+            const duplicate = await findCargoDuplicate(db, cargo.nome, cargo.areaId, cargo.id);
 
-            if (existingCargo) {
+            if (duplicate) {
                 return "CARGO_EXISTS";
             }
 

@@ -27,11 +27,27 @@
   margin-bottom: 30px;
 }
 
+.item-tabs-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
 .item-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.import-export-buttons{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-button {
@@ -105,6 +121,10 @@
   flex-wrap: wrap;
 }
 
+.add-items-actions .excel-import-export-menu {
+  margin-top: 10px;
+}
+
 .btn-adicionar-item {
   /* width: 100%; */
   padding: 12px;
@@ -137,7 +157,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 10px;
 }
 
 .btn-adicionar-lote:hover {
@@ -315,5 +334,10 @@
   .btn-adicionar-lote {
     width: 100%;
     justify-content: center;
+  }
+
+  .add-items-actions .excel-import-export-menu,
+  .add-items-actions .excel-import-export-menu .btn-excel-menu {
+    width: 100%;
   }
 }

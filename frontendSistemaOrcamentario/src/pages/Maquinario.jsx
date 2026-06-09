@@ -6,6 +6,7 @@ import Loading from '../components/Loading';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import './Pages.css';
 import HomePage from '../components/HomePage';
+import ExcelImportExportMenu from '../components/ExcelImportExportMenu';
 import api from '../service/api';
 import { toast } from 'react-toastify';
 import useConfirmAction from '../hooks/useConfirmAction';
@@ -38,7 +39,6 @@ const Maquinario = () => {
         toast.info('Nenhum maquinário encontrado.');
         return;
       }
-      // fetch fornecedores for each maquinario and attach
       const maquinasComFornecedores = await Promise.all(response.data.map(async (m) => {
         try {
           const resp = await api.get(`/maquinarios/maquinario/${m.id}/fornecedores`);
@@ -106,7 +106,7 @@ const Maquinario = () => {
         const fornecedoresResponse = await api.get(`/maquinarios/maquinario/${id}/fornecedores`);
         const fornecedoresList = Array.isArray(fornecedoresResponse.data) ? fornecedoresResponse.data : [];
         const fornecedorId = fornecedoresList.length > 0 ? fornecedoresList[0].id : null;
-        
+
         setEditingMachine({ ...response.data, fornecedorId });
         setIsEditModalOpen(true);
       } else {
@@ -123,13 +123,13 @@ const Maquinario = () => {
       // Extract fornecedorId from machineData
       const fornecedorId = machineData.fornecedorId;
       const oldFornecedorId = editingMachine.fornecedorId;
-      
+
       // Update machine without fornecedorId
       const dataToSend = {
         nome: machineData.nome,
         descricao: machineData.descricao
       };
-      
+
       const response = await api.put(`/maquinarios/maquinario/${editingMachine.id}`, dataToSend);
       if (response.status === 200) {
         // If fornecedor changed, remove old and add new
@@ -149,7 +149,7 @@ const Maquinario = () => {
             console.error('Erro ao atualizar fornecedor:', error);
           }
         }
-        
+
         toast.success('Maquinário atualizado com sucesso!');
         setIsEditModalOpen(false);
         setEditingMachine(null);
@@ -219,7 +219,21 @@ const Maquinario = () => {
 
   return (
     <>
-      <HomePage titulo="Equipamentos" botao="Novo Equipamento" onButtonClick={() => setIsModalOpen(true)} />
+      <HomePage titulo="Equipamentos" botao="Novo Equipamento" onButtonClick={() => setIsModalOpen(true)}>
+        <ExcelImportExportMenu
+          templateUrl="/maquinarios/export/template"
+          importUrl="/maquinarios/import"
+          fileName="modelo-maquinarios"
+          onImportSuccess={findAll}
+          extraDownloadOptions={[
+            {
+              label: 'Baixar equipamentos',
+              url: '/maquinarios/export/list',
+              fileName: 'equipamentos-cadastrados',
+            },
+          ]}
+        />
+      </HomePage>
       {loading ? <Loading /> : <Table columns={columns} data={maquinarios} />}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>

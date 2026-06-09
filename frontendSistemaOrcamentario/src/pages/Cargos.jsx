@@ -6,6 +6,7 @@ import Loading from '../components/Loading';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import './Pages.css';
 import HomePage from '../components/HomePage';
+import ExcelImportExportMenu from '../components/ExcelImportExportMenu';
 import api from '../service/api';
 import { toast } from 'react-toastify';
 import useConfirmAction from '../hooks/useConfirmAction';
@@ -175,7 +176,21 @@ const Cargos = () => {
 
   return (
     <>
-      <HomePage titulo="Cargos" botao="Novo Cargo" onButtonClick={() => setIsModalOpen(true)} />
+      <HomePage titulo="Cargos" botao="Novo Cargo" onButtonClick={() => setIsModalOpen(true)}>
+        <ExcelImportExportMenu
+          templateUrl="/cargos/export/template"
+          importUrl="/cargos/import"
+          fileName="modelo-cargos"
+          onImportSuccess={findAll}
+          extraDownloadOptions={[
+            {
+              label: 'Baixar cargos',
+              url: '/cargos/export/list',
+              fileName: 'cargos-cadastrados',
+            },
+          ]}
+        />
+      </HomePage>
       {loading ? <Loading /> : <Table columns={columns} data={cargos} />}
 
       {isModalOpen && (
