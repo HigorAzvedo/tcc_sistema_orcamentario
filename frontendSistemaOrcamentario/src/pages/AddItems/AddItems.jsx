@@ -20,6 +20,48 @@ const parsePositiveNumber = (value) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 };
 
+const formatOptionLabelWithSuppliers = (option) => {
+  const suppliers = Array.isArray(option?.fornecedores)
+    ? option.fornecedores
+        .map((fornecedor) => fornecedor?.label)
+        .filter(Boolean)
+        .join(', ')
+    : '';
+
+  return suppliers ? `${option.label} - ${suppliers}` : option.label;
+};
+
+const formatOptionDisplayLabelWithSuppliers = (option) => {
+  const suppliers = Array.isArray(option?.fornecedores)
+    ? option.fornecedores
+        .map((fornecedor) => fornecedor?.label)
+        .filter(Boolean)
+        .join(', ')
+    : '';
+
+  if (!suppliers) {
+    return option.label;
+  }
+
+  return (
+    <span className="item-option-label">
+      <span>{option.label}</span>
+      <span className="item-option-supplier">
+        <span> - </span>
+        <strong>{suppliers}</strong>
+      </span>
+    </span>
+  );
+};
+
+const sanitizeFileName = (value) => String(value || '')
+  .trim()
+  .replace(/[\\/:*?"<>|]+/g, '-')
+  .replace(/\s+/g, ' ')
+  .replace(/\s-\s/g, ' - ')
+  .replace(/-+/g, '-')
+  .replace(/^[-\s]+|[-\s]+$/g, '');
+
 const AddItems = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,14 +87,30 @@ const AddItems = () => {
   const [activeTab, setActiveTab] = useState('material');
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
+  const projetoSelecionadoNome = projetos.find(
+    (projeto) => String(projeto.value) === String(projetoSelecionado)
+  )?.label || '';
+
+  const exportFileName = sanitizeFileName(`${projetoSelecionadoNome || 'projeto'} - ${orcamentoNome || 'orcamento'}`);
+
   const loadOptions = useCallback(async () => {
     try {
       const response = await api.get('/itensOrcamentos/itensOrcamento/options');
       if (response.data) {
         console.log(response.data, 'options response');
-        setMateriais(response.data.materiais || []);
+        setMateriais((response.data.materiais || []).map((material) => ({
+          ...material,
+          label: formatOptionLabelWithSuppliers(material),
+          searchLabel: formatOptionLabelWithSuppliers(material),
+          displayLabel: formatOptionDisplayLabelWithSuppliers(material),
+        })));
         setCargos(response.data.cargos || []);
-        setMaquinarios(response.data.maquinarios || []);
+        setMaquinarios((response.data.maquinarios || []).map((maquinario) => ({
+          ...maquinario,
+          label: formatOptionLabelWithSuppliers(maquinario),
+          searchLabel: formatOptionLabelWithSuppliers(maquinario),
+          displayLabel: formatOptionDisplayLabelWithSuppliers(maquinario),
+        })));
       }
     } catch (error) {
       console.error('Erro ao carregar opções:', error);
@@ -211,6 +269,14 @@ const AddItems = () => {
 
     setItensAdicionados((itensAtuais) => [...itensAtuais, ...novosItens]);
   };
+
+  const materialSelecionadoAtual = activeTab === 'material'
+    ? materiais.find((material) => Number(material.value) === Number(materialSelecionado))
+    : null;
+
+  const quantidadeLabel = materialSelecionadoAtual?.unidadeMedida
+    ? `Quantidade - ${materialSelecionadoAtual.unidadeMedida}`
+    : 'Quantidade';
 
   const removerItem = (id) => {
     setItensAdicionados(itensAdicionados.filter(item => item.id !== id));
@@ -381,7 +447,7 @@ const AddItems = () => {
             <ExcelImportExportMenu
               templateUrl="/itensOrcamentos/export/template"
               importUrl="/itensOrcamentos/import/preview"
-              fileName="modelo-itens-orcamento"
+              fileName={exportFileName}
               importPayload={{
                 idProjeto: projetoSelecionado,
                 idOrcamento: orcamentoId,
@@ -483,7 +549,7 @@ const AddItems = () => {
           </div> */}
 
           <div className="form-group">
-            <label>Quantidade </label>
+            <label>{quantidadeLabel}</label>
             <input
               type="number"
               placeholder="0"

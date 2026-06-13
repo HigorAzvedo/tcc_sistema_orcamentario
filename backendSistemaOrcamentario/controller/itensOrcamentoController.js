@@ -9,7 +9,7 @@ const {
     normalizeKey,
 } = require('../utils/excelService');
 
-const ITENS_ORCAMENTO_TEMPLATE_COLUMNS = ['Tipo', 'Item', 'Quantidade', 'Valor Unitario'];
+const ITENS_ORCAMENTO_TEMPLATE_COLUMNS = ['Tipo', 'Item', 'Fornecedor', 'Quantidade', 'Valor Unitario'];
 
 const ITEM_TYPE_CONFIG = {
     material: {
@@ -70,6 +70,108 @@ const getRowValue = (row, keys) => {
     const matchedKey = Object.keys(row).find((rowKey) => normalizedKeys.includes(normalizeKey(rowKey)));
 
     return matchedKey ? String(row[matchedKey] ?? '').trim() : '';
+};
+
+const getFornecedorNames = (value) => String(value ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+const buildRecordsByNameAndSupplier = (records) => {
+    const map = new Map();
+
+    for (const record of records) {
+        const recordKey = normalizeKey(record.nome);
+
+        if (!map.has(recordKey)) {
+            map.set(recordKey, []);
+        }
+
+        let indexedRecord = map.get(recordKey).find((item) => Number(item.id) === Number(record.id));
+
+        if (!indexedRecord) {
+            indexedRecord = {
+                id: record.id,
+                nome: record.nome,
+                fornecedores: [],
+            };
+
+            map.get(recordKey).push(indexedRecord);
+        }
+
+        if (record.fornecedorNome) {
+            const fornecedorExiste = indexedRecord.fornecedores.some(
+                (fornecedor) => normalizeKey(fornecedor) === normalizeKey(record.fornecedorNome)
+            );
+
+            if (!fornecedorExiste) {
+                indexedRecord.fornecedores.push(record.fornecedorNome);
+            }
+        }
+    }
+
+    return map;
+};
+
+const resolveImportedItem = (tipoItem, itemNome, fornecedorRaw, recordsByType) => {
+    const config = ITEM_TYPE_CONFIG[tipoItem];
+
+    if (!config) {
+        return { error: `Tipo "${tipoItem}" invalido.` };
+    }
+
+    const typedRecords = recordsByType[tipoItem];
+
+    if (!typedRecords) {
+        return { error: `${config.label} "${itemNome}" nao encontrado.` };
+    }
+
+    if (tipoItem === 'cargo') {
+        const cargoId = typedRecords.map.get(normalizeKey(itemNome));
+        const selectedItem = typedRecords.records.find((record) => Number(record.id) === Number(cargoId));
+
+        if (!selectedItem) {
+            return { error: `${config.label} "${itemNome}" nao encontrado.` };
+        }
+
+        return { selectedItem };
+    }
+
+    const candidateRecords = typedRecords.map.get(normalizeKey(itemNome)) || [];
+    const fornecedorNames = getFornecedorNames(fornecedorRaw);
+
+    if (candidateRecords.length === 0) {
+        return { error: `${config.label} "${itemNome}" nao encontrado.` };
+    }
+
+    if (fornecedorNames.length === 0) {
+        if (candidateRecords.length === 1) {
+            return { selectedItem: candidateRecords[0] };
+        }
+
+        return {
+            error: `Informe o Fornecedor para identificar o ${config.label.toLowerCase()} "${itemNome}".`,
+        };
+    }
+
+    const normalizedFornecedorNames = fornecedorNames.map((name) => normalizeKey(name));
+    const matchingRecords = candidateRecords.filter((candidate) => (
+        candidate.fornecedores.some((fornecedorNome) => normalizedFornecedorNames.includes(normalizeKey(fornecedorNome)))
+    ));
+
+    if (matchingRecords.length === 1) {
+        return { selectedItem: matchingRecords[0] };
+    }
+
+    if (matchingRecords.length === 0) {
+        return {
+            error: `Fornecedor "${fornecedorRaw}" nao corresponde ao ${config.label.toLowerCase()} "${itemNome}".`,
+        };
+    }
+
+    return {
+        error: `Mais de um ${config.label.toLowerCase()} corresponde ao item "${itemNome}" com o fornecedor informado.`,
+    };
 };
 
 const hasExactlyOneSelectedType = (itemBudget) => {
@@ -145,6 +247,7 @@ module.exports = {
             const buffer = buildTemplateBuffer(ITENS_ORCAMENTO_TEMPLATE_COLUMNS, {
                 Tipo: 'material',
                 Item: 'Nome do material cadastrado',
+                Fornecedor: 'Nome do fornecedor cadastrado',
                 Quantidade: 1,
                 'Valor Unitario': 100,
             });
@@ -188,10 +291,11 @@ module.exports = {
             const rows = parseExcelBuffer(buffer).filter((row) => {
                 const tipo = getRowValue(row, ['Tipo', 'tipo']);
                 const item = getRowValue(row, ['Item', 'item', 'Nome', 'nome']);
+                const fornecedor = getRowValue(row, ['Fornecedor', 'fornecedor']);
                 const quantidade = getRowValue(row, ['Quantidade', 'quantidade']);
                 const valorUnitario = getRowValue(row, ['Valor Unitario', 'Valor Unitário', 'valorUnitario', 'valor unitario']);
 
-                return tipo || item || quantidade || valorUnitario;
+                return tipo || item || fornecedor || quantidade || valorUnitario;
             });
 
             if (rows.length === 0) {
@@ -201,10 +305,23 @@ module.exports = {
             const recordsByType = {};
 
             for (const [type, config] of Object.entries(ITEM_TYPE_CONFIG)) {
-                const records = await db(config.table).select('id', 'nome');
+                const records = type === 'material'
+                    ? await db('Materiais as m')
+                        .leftJoin('FornecedorMaterial as fm', 'fm.materialId', 'm.id')
+                        .leftJoin('Fornecedor as f', 'f.id', 'fm.fornecedorId')
+                        .select('m.id', 'm.nome', 'f.nome as fornecedorNome')
+                    : type === 'maquinario'
+                        ? await db('Maquinarios as maq')
+                            .leftJoin('FornecedorMaquinario as fm', 'fm.maquinarioId', 'maq.id')
+                            .leftJoin('Fornecedor as f', 'f.id', 'fm.fornecedorId')
+                            .select('maq.id', 'maq.nome', 'f.nome as fornecedorNome')
+                        : await db(config.table).select('id', 'nome');
+
                 recordsByType[type] = {
                     records,
-                    map: buildNameMap(records),
+                    map: type === 'cargo'
+                        ? buildNameMap(records)
+                        : buildRecordsByNameAndSupplier(records),
                 };
             }
 
@@ -216,14 +333,18 @@ module.exports = {
                 const rowNumber = index + 2;
                 const tipoRaw = getRowValue(row, ['Tipo', 'tipo']);
                 const itemNome = getRowValue(row, ['Item', 'item', 'Nome', 'nome']);
+                const fornecedorRaw = getRowValue(row, ['Fornecedor', 'fornecedor']);
                 const quantidadeRaw = getRowValue(row, ['Quantidade', 'quantidade']);
                 const valorUnitarioRaw = getRowValue(row, ['Valor Unitario', 'Valor Unitário', 'valorUnitario', 'valor unitario']);
                 const tipoItem = getItemTypeKey(tipoRaw);
                 const quantidade = toExcelNumber(quantidadeRaw);
                 const valorUnitario = toExcelNumber(valorUnitarioRaw);
+                const fornecedorObrigatorio = tipoItem === 'material' || tipoItem === 'maquinario';
 
-                if (!tipoRaw || !itemNome || !quantidadeRaw || !valorUnitarioRaw) {
-                    errors.push({ row: rowNumber, message: 'Preencha Tipo, Item, Quantidade e Valor Unitario.' });
+                if (!tipoRaw || !itemNome || !quantidadeRaw || !valorUnitarioRaw || (fornecedorObrigatorio && !fornecedorRaw)) {
+                    errors.push({ row: rowNumber, message: fornecedorObrigatorio
+                        ? 'Preencha Tipo, Item, Fornecedor, Quantidade e Valor Unitario.'
+                        : 'Preencha Tipo, Item, Quantidade e Valor Unitario.' });
                     continue;
                 }
 
@@ -237,14 +358,15 @@ module.exports = {
                     continue;
                 }
 
-                const config = ITEM_TYPE_CONFIG[tipoItem];
-                const itemId = recordsByType[tipoItem].map.get(normalizeKey(itemNome));
-                const selectedItem = recordsByType[tipoItem].records.find((record) => Number(record.id) === Number(itemId));
+                const resolution = resolveImportedItem(tipoItem, itemNome, fornecedorRaw, recordsByType);
 
-                if (!selectedItem) {
-                    errors.push({ row: rowNumber, message: `${config.label} "${itemNome}" nao encontrado.` });
+                if (resolution.error) {
+                    errors.push({ row: rowNumber, message: resolution.error });
                     continue;
                 }
+
+                const config = ITEM_TYPE_CONFIG[tipoItem];
+                const selectedItem = resolution.selectedItem;
 
                 const item = {
                     id: `${Date.now()}-${index}`,

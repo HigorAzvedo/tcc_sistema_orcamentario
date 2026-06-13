@@ -25,6 +25,10 @@ const FilterableSelect = ({
     return options.find((option) => String(option.value) === normalizedValue);
   }, [options, normalizedValue]);
 
+  const getSearchText = (option) => String(option?.searchLabel || option?.label || '');
+
+  const getDisplayContent = (option) => option?.displayLabel || option?.label;
+
   const filteredOptions = useMemo(() => {
     const query = normalize(searchTerm);
 
@@ -32,7 +36,7 @@ const FilterableSelect = ({
       return options;
     }
 
-    return options.filter((option) => normalize(option.label).includes(query));
+    return options.filter((option) => normalize(getSearchText(option)).includes(query));
   }, [options, searchTerm]);
 
   useEffect(() => {
@@ -83,7 +87,7 @@ const FilterableSelect = ({
         aria-expanded={isOpen}
       >
         <span className={selectedOption ? 'filterable-select-value' : 'filterable-select-placeholder'}>
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? getDisplayContent(selectedOption) : placeholder}
         </span>
         <span className="filterable-select-arrow">{isOpen ? '▲' : '▼'}</span>
       </button>
@@ -114,7 +118,7 @@ const FilterableSelect = ({
                       role="option"
                       aria-selected={isSelected}
                     >
-                      {option.label}
+                      {getDisplayContent(option)}
                     </button>
                   </li>
                 );
