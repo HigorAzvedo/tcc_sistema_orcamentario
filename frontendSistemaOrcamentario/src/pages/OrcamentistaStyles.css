@@ -55,7 +55,6 @@
   margin-bottom: 5px;
 }
 
-/* Stats Grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -283,12 +282,12 @@
 }
 
 .btn-secondary {
-  background: #6c757d;
+  background: #17A2B8;
   color: white;
 }
 
 .btn-secondary:hover {
-  background: #5a6268;
+  background: #138496;
 }
 
 .btn-excluir {

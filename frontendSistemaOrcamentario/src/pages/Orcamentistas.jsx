@@ -156,7 +156,7 @@ const Orcamentistas = () => {
       accessor: "id",
       render: (id) => (
         <div className='container-acoes'>
-          <button className="btn-detalhes" onClick={() => navigate(`/orcamentistas/${id}`)} title="Ver Detalhes e Vínculos"><FaEye /></button>
+          <button className="btn-showItems" onClick={() => navigate(`/orcamentistas/${id}`)} title="Ver Detalhes e Vínculos"><FaEye /></button>
           <button className="btn-detalhes" onClick={() => editOrcamentista(id)} title="Editar"><FaEdit /></button>
           <button className="btn-excluir" onClick={() => deleteOrcamentista(id)} title="Excluir"><FaTrash /></button>
         </div>

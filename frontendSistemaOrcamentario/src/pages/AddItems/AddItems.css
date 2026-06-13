@@ -27,11 +27,27 @@
   margin-bottom: 30px;
 }
 
+.item-tabs-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
 .item-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.import-export-buttons{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-button {
@@ -100,6 +116,15 @@
   width: 100%;
 }
 
+.add-items-actions {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.add-items-actions .excel-import-export-menu {
+  margin-top: 10px;
+}
+
 .btn-adicionar-item {
   /* width: 100%; */
   padding: 12px;
@@ -117,6 +142,25 @@
 
 .btn-adicionar-item:hover {
   background-color: #0056b3;
+}
+
+.btn-adicionar-lote {
+  padding: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-adicionar-lote:hover {
+  background-color: #117a8b;
 }
 
 .tabela-container {
@@ -179,6 +223,29 @@
   background-color: #c82333;
 }
 
+.table-edit-input {
+  width: 120px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: #fff;
+  color: #212529;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.table-edit-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
+
+.table-edit-input.invalid {
+  border-color: #dc3545;
+  background: #fff8f8;
+}
+
 .footer-container {
   display: flex;
   justify-content: space-between;
@@ -231,6 +298,21 @@
   background-color: #218838;
 }
 
+.btn-back {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  gap: 8px;
+  background: #17A2B8;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .form-row {
     grid-template-columns: 1fr;
@@ -247,7 +329,15 @@
   }
 
   .btn-voltar,
-  .btn-salvar {
+  .btn-salvar,
+  .btn-adicionar-item,
+  .btn-adicionar-lote {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .add-items-actions .excel-import-export-menu,
+  .add-items-actions .excel-import-export-menu .btn-excel-menu {
     width: 100%;
   }
 }

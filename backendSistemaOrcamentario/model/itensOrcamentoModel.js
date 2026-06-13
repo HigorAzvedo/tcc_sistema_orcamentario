@@ -79,17 +79,87 @@ module.exports = {
             const [projetos, orcamentos, materiais, cargos, maquinarios] = await Promise.all([
                 db("Projetos").select("id", "nome"),
                 db("Orcamentos").select("id", "nome"),
-                db("Materiais").select("id", "nome"),
+                db("Materiais as m")
+                    .leftJoin("FornecedorMaterial as fm", "fm.materialId", "m.id")
+                    .leftJoin("Fornecedor as f", "f.id", "fm.fornecedorId")
+                    .select(
+                        "m.id",
+                        "m.nome",
+                        "m.unidadeMedida",
+                        "f.id as fornecedorId",
+                        "f.nome as fornecedorNome"
+                    ),
                 db("Cargos").select("id", "nome"),
-                db("Maquinarios").select("id", "nome")
+                db("Maquinarios as maq")
+                    .leftJoin("FornecedorMaquinario as fm", "fm.maquinarioId", "maq.id")
+                    .leftJoin("Fornecedor as f", "f.id", "fm.fornecedorId")
+                    .select(
+                        "maq.id",
+                        "maq.nome",
+                        "f.id as fornecedorId",
+                        "f.nome as fornecedorNome"
+                    )
             ]);
+
+            const materiaisMap = new Map();
+            for (const material of materiais) {
+                if (!materiaisMap.has(material.id)) {
+                    materiaisMap.set(material.id, {
+                        value: material.id,
+                        label: material.nome,
+                        unidadeMedida: material.unidadeMedida || null,
+                        fornecedores: []
+                    });
+                }
+
+                const materialOption = materiaisMap.get(material.id);
+
+                if (material.fornecedorId) {
+                    const fornecedorExiste = materialOption.fornecedores.some(
+                        (fornecedor) => fornecedor.value === material.fornecedorId
+                    );
+
+                    if (!fornecedorExiste) {
+                        materialOption.fornecedores.push({
+                            value: material.fornecedorId,
+                            label: material.fornecedorNome
+                        });
+                    }
+                }
+            }
+
+            const maquinariosMap = new Map();
+            for (const maquinario of maquinarios) {
+                if (!maquinariosMap.has(maquinario.id)) {
+                    maquinariosMap.set(maquinario.id, {
+                        value: maquinario.id,
+                        label: maquinario.nome,
+                        fornecedores: []
+                    });
+                }
+
+                const maquinarioOption = maquinariosMap.get(maquinario.id);
+
+                if (maquinario.fornecedorId) {
+                    const fornecedorExiste = maquinarioOption.fornecedores.some(
+                        (fornecedor) => fornecedor.value === maquinario.fornecedorId
+                    );
+
+                    if (!fornecedorExiste) {
+                        maquinarioOption.fornecedores.push({
+                            value: maquinario.fornecedorId,
+                            label: maquinario.fornecedorNome
+                        });
+                    }
+                }
+            }
 
             return {
                 projetos: projetos.map(p => ({ value: p.id, label: p.nome })),
                 orcamentos: orcamentos.map(o => ({ value: o.id, label: o.nome })),
-                materiais: materiais.map(m => ({ value: m.id, label: m.nome })),
+                materiais: Array.from(materiaisMap.values()),
                 cargos: cargos.map(c => ({ value: c.id, label: c.nome })),
-                maquinarios: maquinarios.map(maq => ({ value: maq.id, label: maq.nome }))
+                maquinarios: Array.from(maquinariosMap.values())
             };
         } catch (error) {
             console.log(error);

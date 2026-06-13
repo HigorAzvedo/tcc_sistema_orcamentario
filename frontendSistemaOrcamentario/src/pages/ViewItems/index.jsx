@@ -6,7 +6,7 @@ import Modal from '../../components/Modal';
 import Form from '../../components/Form';
 import Loading from '../../components/Loading';
 import Table from '../../components/Table';
-import { FaEdit, FaTrash, FaFileUpload, FaFilePdf, FaFileExcel } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaFileUpload, FaFilePdf, FaFileExcel, FaArrowLeft } from 'react-icons/fa';
 import './style.css';
 import '../Pages.css';
 import useConfirmAction from '../../hooks/useConfirmAction';
@@ -432,6 +432,9 @@ function ViewItems() {
     }, [orcamentoId, navigate]);
     return (
         <div className="show-items-header">
+            <button onClick={() => navigate('/orcamentos')} className="btn-back">
+                <FaArrowLeft /> Voltar
+            </button>
             <div className="show-items-title-row">
                 <h2>Ver Itens do Orçamento: <span className="orcamento-nome">{orcamentoNome || 'Selecione um Orçamento'}</span></h2>
 
@@ -441,7 +444,7 @@ function ViewItems() {
                         <button
                             title="Exportar itens do orçamento"
                             className="btn-export"
-                            
+
                         >
                             <FaFileUpload />
                         </button>
