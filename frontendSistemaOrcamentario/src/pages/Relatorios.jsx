@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useContext } from 'react';
 import ReactECharts from 'echarts-for-react';
 import api from '../service/api';
 import { toast } from 'react-toastify';
 import Loading from '../components/Loading';
 import Table from '../components/Table';
 import FilterableSelect from '../components/FilterableSelect';
+import { AuthContext } from '../context/AuthContext';
 import {
   FaChartBar,
   FaChartPie,
@@ -54,6 +55,9 @@ const ProgressBar = ({ value, max, color }) => {
 
 /* ─────────────────────────────────────────────── */
 const Relatorios = () => {
+  const { user } = useContext(AuthContext);
+  const isOrcamentista = user?.role === 'orcamentista';
+
   const [loading, setLoading] = useState(true);
   const [orcamentos, setOrcamentos] = useState([]);
   const [projetos, setProjetos] = useState([]);
@@ -68,26 +72,43 @@ const Relatorios = () => {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [orcRes, projRes, cliRes, matRes, maqRes, fornRes] = await Promise.allSettled([
-        api.get('/orcamentos'),
-        api.get('/projetos'),
-        api.get('/clientes'),
-        api.get('/materiais'),
-        api.get('/maquinario'),
-        api.get('/fornecedores'),
-      ]);
-      if (orcRes.status === 'fulfilled') setOrcamentos(orcRes.value.data || []);
-      if (projRes.status === 'fulfilled') setProjetos(projRes.value.data || []);
-      if (cliRes.status === 'fulfilled') setClientes(cliRes.value.data || []);
-      if (matRes.status === 'fulfilled') setMateriais(matRes.value.data || []);
-      if (maqRes.status === 'fulfilled') setMaquinarios(maqRes.value.data || []);
-      if (fornRes.status === 'fulfilled') setFornecedores(fornRes.value.data || []);
+      if (isOrcamentista) {
+        // Orçamentista: carrega apenas dados dos seus clientes vinculados
+        const [orcRes, projRes, cliRes] = await Promise.allSettled([
+          api.get('/orcamentistas/meus-orcamentos'),
+          api.get('/orcamentistas/meus-projetos'),
+          api.get('/orcamentistas/meus-clientes'),
+        ]);
+        if (orcRes.status === 'fulfilled') setOrcamentos(orcRes.value.data || []);
+        if (projRes.status === 'fulfilled') setProjetos(projRes.value.data || []);
+        if (cliRes.status === 'fulfilled') {
+          // meus-clientes retorna [{value, label}], normalizar para [{id, nome}]
+          const raw = cliRes.value.data || [];
+          setClientes(raw.map((c) => ({ id: c.value, nome: c.label })));
+        }
+      } else {
+        // Admin / outros: carrega tudo
+        const [orcRes, projRes, cliRes, matRes, maqRes, fornRes] = await Promise.allSettled([
+          api.get('/orcamentos'),
+          api.get('/projetos'),
+          api.get('/clientes'),
+          api.get('/materiais'),
+          api.get('/maquinario'),
+          api.get('/fornecedores'),
+        ]);
+        if (orcRes.status === 'fulfilled') setOrcamentos(orcRes.value.data || []);
+        if (projRes.status === 'fulfilled') setProjetos(projRes.value.data || []);
+        if (cliRes.status === 'fulfilled') setClientes(cliRes.value.data || []);
+        if (matRes.status === 'fulfilled') setMateriais(matRes.value.data || []);
+        if (maqRes.status === 'fulfilled') setMaquinarios(maqRes.value.data || []);
+        if (fornRes.status === 'fulfilled') setFornecedores(fornRes.value.data || []);
+      }
     } catch {
       toast.error('Erro ao carregar dados para relatórios.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isOrcamentista]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -363,7 +384,11 @@ const Relatorios = () => {
       <div className="relatorios-header">
         <div className="relatorios-header-text">
           <h1><FaChartBar className="header-icon" /> Relatórios</h1>
-          <p>Visão geral e análise do sistema orçamentário</p>
+          <p>
+            {isOrcamentista
+              ? 'Visão geral dos orçamentos e projetos dos seus clientes'
+              : 'Visão geral e análise do sistema orçamentário'}
+          </p>
         </div>
         <button className="btn-refresh" onClick={loadAll} title="Atualizar dados">
           <FaSync /> Atualizar
@@ -373,13 +398,13 @@ const Relatorios = () => {
       {/* ─── Cards de resumo ─── */}
       <div className="relatorios-stats">
         {[
-          { label: 'Orçamentos', value: totalOrcamentos, icon: <FaFileInvoiceDollar />, cls: 'accent-blue' },
-          { label: 'Projetos', value: projetos.length, icon: <FaProjectDiagram />, cls: 'accent-purple' },
-          { label: 'Clientes', value: clientes.length, icon: <FaUsers />, cls: 'accent-green' },
-          { label: 'Materiais', value: materiais.length, icon: <FaBoxes />, cls: 'accent-orange' },
-          { label: 'Equipamentos', value: maquinarios.length, icon: <FaTools />, cls: 'accent-teal' },
-          { label: 'Fornecedores', value: fornecedores.length, icon: <FaTruck />, cls: 'accent-red' },
-        ].map(({ label, value, icon, cls }) => (
+          { label: 'Orçamentos', value: totalOrcamentos, icon: <FaFileInvoiceDollar />, cls: 'accent-blue', show: true },
+          { label: 'Projetos', value: projetos.length, icon: <FaProjectDiagram />, cls: 'accent-purple', show: true },
+          { label: 'Clientes', value: clientes.length, icon: <FaUsers />, cls: 'accent-green', show: true },
+          { label: 'Materiais', value: materiais.length, icon: <FaBoxes />, cls: 'accent-orange', show: !isOrcamentista },
+          { label: 'Equipamentos', value: maquinarios.length, icon: <FaTools />, cls: 'accent-teal', show: !isOrcamentista },
+          { label: 'Fornecedores', value: fornecedores.length, icon: <FaTruck />, cls: 'accent-red', show: !isOrcamentista },
+        ].filter(({ show }) => show).map(({ label, value, icon, cls }) => (
           <div key={label} className={`rel-stat-card ${cls}`}>
             <div className="rel-stat-icon">{icon}</div>
             <div className="rel-stat-info">

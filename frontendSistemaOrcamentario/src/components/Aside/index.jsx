@@ -57,7 +57,7 @@ const Aside = ({ isCollapsed = false, onNavigate = () => { } }) => {
 
           {renderMenuItem('/projetos', <FaProjectDiagram />, 'Projetos')}
           {renderMenuItem('/orcamentos', <FaFileInvoiceDollar />, 'Orçamentos')}
-          {!isUserRole && !isOrcamentistaRole && renderMenuItem('/relatorios', <FaChartBar />, 'Relatórios')}
+          {!isUserRole && renderMenuItem('/relatorios', <FaChartBar />, 'Relatórios')}
 
           {!isCollapsed && !isUserRole && <p>Cadastro de Itens</p>}
 
