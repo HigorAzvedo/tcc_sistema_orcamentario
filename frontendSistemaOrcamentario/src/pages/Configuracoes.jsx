@@ -159,8 +159,9 @@ const Configuracoes = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    disabled={loading}
+                    disabled
                   />
+                  <small>Este campo não pode ser alterado</small>
                 </div>
 
                 <div className="form-group">
