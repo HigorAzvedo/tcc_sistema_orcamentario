@@ -29,7 +29,7 @@ Ideal para empresas de construção civil, engenharia, consultorias e prestadore
 
 🔐 **Segurança**
 - Autenticação JWT + Auth0
-- 3 níveis de acesso: Admin, Manager, User
+- 3 níveis de acesso: Admin, Orçamentista, Usuário
 - Controle de permissões por funcionalidade
 
 📊 **Cálculos Automáticos**

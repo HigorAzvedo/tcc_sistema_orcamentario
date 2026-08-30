@@ -69,11 +69,10 @@ const checkRole = (roles) => {
 
 const isAdmin = checkRole(['admin']);
 
-const isAdminOrManager = checkRole(['admin', 'manager']);
+const isAdminOrOrcamentista = checkRole(['admin', 'orcamentista']);
 
 const isOrcamentista = checkRole(['orcamentista']);
 
-const isAdminOrManagerOrOrcamentista = checkRole(['admin', 'manager', 'orcamentista']);
 
 const attachClienteId = async (req, res, next) => {
     try {
@@ -81,8 +80,8 @@ const attachClienteId = async (req, res, next) => {
             return res.status(401).json({ error: 'Usuário não autenticado' });
         }
 
-        // Se for admin ou manager, não precisa filtrar por cliente
-        if (req.user.role === 'admin' || req.user.role === 'manager') {
+        // Administradores podem acessar os dados de todos os clientes.
+        if (req.user.role === 'admin') {
             req.clienteId = null; // null = ver todos
             req.clienteIds = null;
             return next();
@@ -130,8 +129,7 @@ module.exports = {
     verifyLocalToken,
     checkRole,
     isAdmin,
-    isAdminOrManager,
+    isAdminOrOrcamentista,
     isOrcamentista,
-    isAdminOrManagerOrOrcamentista,
     attachClienteId
 };

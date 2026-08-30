@@ -29,7 +29,7 @@ const Aside = ({ isCollapsed = false, onNavigate = () => { } }) => {
 
   const isUserRole = user?.role === 'user';
   const isOrcamentistaRole = user?.role === 'orcamentista';
-  const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
 
   const renderMenuItem = (to, icon, label) => (
     <li>
@@ -71,7 +71,7 @@ const Aside = ({ isCollapsed = false, onNavigate = () => { } }) => {
           {!isCollapsed && !isOrcamentistaRole && !isUserRole && <p>Usuários</p>}
 
           {!isUserRole && !isOrcamentistaRole && renderMenuItem('/clientes', <FaUsers />, 'Clientes')}
-          {isAdminOrManager && renderMenuItem('/orcamentistas', <FaUserTie />, 'Orçamentistas')}
+          {isAdmin && renderMenuItem('/orcamentistas', <FaUserTie />, 'Orçamentistas')}
 
           {!isCollapsed && <p>Configurações</p>          }
           {renderMenuItem('/configuracoes', <FaCogs />, 'Configurações')}

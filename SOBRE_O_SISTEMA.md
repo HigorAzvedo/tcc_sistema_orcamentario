@@ -31,7 +31,7 @@ Facilitar o processo de **criação, gestão e controle de orçamentos** atravé
 ### 👥 Gestão de Usuários e Autenticação
 - Sistema de autenticação seguro com JWT
 - Integração com Auth0 para login social
-- Três níveis de permissão: **Admin**, **Manager** e **User**
+- Três níveis de permissão: **Admin**, **Orçamentista** e **Usuário**
 - Controle de acesso baseado em roles (RBAC)
 - Gestão de perfis de usuários
 

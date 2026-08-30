@@ -6,7 +6,8 @@ import Modal from '../../components/Modal';
 import Form from '../../components/Form';
 import Loading from '../../components/Loading';
 import Table from '../../components/Table';
-import { FaEdit, FaTrash, FaFileUpload, FaFilePdf, FaFileExcel, FaArrowLeft } from 'react-icons/fa';
+import ExcelImportExportMenu from '../../components/ExcelImportExportMenu';
+import { FaEdit, FaTrash, FaFilePdf, FaFileExcel, FaArrowLeft } from 'react-icons/fa';
 import './style.css';
 import '../Pages.css';
 import useConfirmAction from '../../hooks/useConfirmAction';
@@ -29,7 +30,6 @@ function ViewItems() {
     const [cargos, setCargos] = useState([]);
     const [maquinarios, setMaquinarios] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
     const { confirmAction, confirmDialog } = useConfirmAction();
 
     const formatCurrency = (value) => {
@@ -345,7 +345,6 @@ function ViewItems() {
             window.URL.revokeObjectURL(blobUrl);
 
             toast.success(`Download do arquivo ${format.toUpperCase()} iniciado!`);
-            setIsExportMenuOpen(false);
         } catch (error) {
             console.error(`Erro ao exportar itens do orçamento em ${format}:`, error);
             toast.error(`Erro ao exportar itens em ${format.toUpperCase()}.`);
@@ -438,36 +437,25 @@ function ViewItems() {
             <div className="show-items-title-row">
                 <h2>Ver Itens do Orçamento: <span className="orcamento-nome">{orcamentoNome || 'Selecione um Orçamento'}</span></h2>
 
-                <div className="export-menu-wrapper">
-                    <div onClick={() => setIsExportMenuOpen((prev) => !prev)} className='export-button-container'>
-
-                        <button
-                            title="Exportar itens do orçamento"
-                            className="btn-export"
-
-                        >
-                            <FaFileUpload />
-                        </button>
-                        <span>Exportar Itens</span>
-                    </div>
-
-                    {isExportMenuOpen && (
-                        <div className="export-tooltip-menu">
-                            <button
-                                className="export-option"
-                                onClick={() => downloadBudgetItems('pdf')}
-                            >
-                                <FaFilePdf /> PDF
-                            </button>
-                            <button
-                                className="export-option"
-                                onClick={() => downloadBudgetItems('excel')}
-                            >
-                                <FaFileExcel /> Excel
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <ExcelImportExportMenu
+                    buttonLabel="Exportar Itens"
+                    customExportActions={[
+                        {
+                            label: 'Exportar como PDF',
+                            description: 'Gerar relatório em PDF do orçamento',
+                            icon: <FaFilePdf />,
+                            iconClass: 'excel-dropdown-item-icon--custom',
+                            onClick: () => downloadBudgetItems('pdf'),
+                        },
+                        {
+                            label: 'Exportar como Excel',
+                            description: 'Gerar planilha Excel do orçamento',
+                            icon: <FaFileExcel />,
+                            iconClass: 'excel-dropdown-item-icon--export',
+                            onClick: () => downloadBudgetItems('excel'),
+                        },
+                    ]}
+                />
             </div>
 
             {loading ? (
