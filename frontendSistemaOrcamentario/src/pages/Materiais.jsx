@@ -258,6 +258,7 @@ const Materiais = () => {
               label: 'Baixar materiais',
               url: '/materiais/export/list',
               fileName: 'materiais-cadastrados',
+              description: 'Exportar todos os materiais cadastrados',
             },
 
           ]}

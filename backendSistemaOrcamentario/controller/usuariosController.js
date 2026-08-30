@@ -1,5 +1,7 @@
 const usuariosModel = require('../model/usuariosModel');
 
+const ALLOWED_ROLES = ['admin', 'user', 'orcamentista'];
+
 module.exports = {
     async index(req, res) {
         try {
@@ -36,6 +38,10 @@ module.exports = {
 
             if (usuario === -1) {
                 return res.status(404).json({ error: 'Usuário não encontrado' });
+            }
+
+            if (role && !ALLOWED_ROLES.includes(role)) {
+                return res.status(400).json({ error: 'Perfil de usuário inválido' });
             }
 
             const updateData = {

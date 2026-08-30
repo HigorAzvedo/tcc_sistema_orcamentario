@@ -1,43 +1,184 @@
-.excel-import-export-menu .btn-excel-menu {
-    background-color: #f8fafc;
-    border: 1px solid #cbd5e1;
-    color: #15803d;
-    padding: 10px 16px;
-    border-radius: 5px;
-    cursor: pointer;
+.excel-import-export-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-excel-menu {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 16px;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    gap: 7px;
+    padding: 9px 14px;
+    background: #ffffff;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    color: #15803d;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+    white-space: nowrap;
+    user-select: none;
 }
 
-.excel-import-export-menu .btn-excel-menu:hover:not(:disabled) {
-    background-color: #ecfdf5;
+.btn-excel-menu:hover:not(:disabled) {
+    background: #f0fdf4;
     border-color: #86efac;
+    box-shadow: 0 2px 8px rgba(21, 128, 61, 0.12);
 }
 
-.excel-import-export-menu .btn-excel-menu:disabled {
-    opacity: 0.6;
+.btn-excel-menu--open {
+    background: #f0fdf4;
+    border-color: #4ade80;
+    box-shadow: 0 2px 10px rgba(21, 128, 61, 0.15);
+}
+
+.btn-excel-menu:disabled {
+    opacity: 0.55;
     cursor: not-allowed;
 }
 
-.excel-import-export-menu .btn-excel-menu:focus-visible {
-    outline: 2px solid #94a3b8;
+.btn-excel-menu:focus-visible {
+    outline: 2px solid #4ade80;
     outline-offset: 2px;
+}
+
+.btn-excel-icon {
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.btn-excel-chevron {
+    font-size: 11px;
+    color: #6b7280;
+    flex-shrink: 0;
+    transition: transform 0.22s ease;
+}
+
+.btn-excel-chevron--open {
+    transform: rotate(180deg);
+}
+
+.excel-dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    min-width: 230px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    animation: excelMenuFadeIn 0.18s ease forwards;
+}
+
+@keyframes excelMenuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.excel-dropdown-section {
+    padding: 6px 0;
+}
+
+.excel-dropdown-section-label {
+    display: block;
+    padding: 4px 14px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #9ca3af;
+}
+
+.excel-dropdown-divider {
+    height: 1px;
+    background: #f3f4f6;
+    margin: 2px 0;
+}
+
+.excel-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.14s ease;
+}
+
+.excel-dropdown-item:hover:not(:disabled) {
+    background: #f9fafb;
+}
+
+.excel-dropdown-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.excel-dropdown-item-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.excel-dropdown-item-icon--export {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.excel-dropdown-item-icon--import {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.excel-dropdown-item-icon--custom {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.excel-dropdown-item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.excel-dropdown-item-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #111827;
+    line-height: 1.3;
+}
+
+.excel-dropdown-item-desc {
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.3;
 }
 
 .excel-file-input {
     display: none;
 }
 
-@media (max-width: 426px) {
-    .excel-import-export-menu .btn-excel-menu-label {
+@media (max-width: 480px) {
+    .btn-excel-menu-label {
         display: none;
     }
 
-    .excel-import-export-menu .btn-excel-menu {
-        padding: 10px 12px;
+    .btn-excel-menu {
+        padding: 9px 11px;
     }
 }

@@ -86,7 +86,7 @@
       "body": {
         "nome": "João Silva Atualizado",
         "email": "joao.novo@example.com",
-        "role": "manager",
+        "role": "orcamentista",
         "ativo": true
       }
     },

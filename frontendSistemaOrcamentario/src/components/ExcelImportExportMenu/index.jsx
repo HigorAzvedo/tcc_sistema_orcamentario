@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaFileDownload, FaFileExcel, FaFileUpload } from 'react-icons/fa';
+import { FaFileDownload, FaFileExcel, FaFileUpload, FaChevronDown } from 'react-icons/fa';
 import api from '../../service/api';
 import { toast } from 'react-toastify';
-import '../../pages/Pages.css';
 import './style.css';
 
 const ExcelImportExportMenu = ({
@@ -11,9 +10,11 @@ const ExcelImportExportMenu = ({
     fileName = 'modelo',
     importPayload = {},
     templateButtonLabel = 'Exportar modelo',
-    importButtonLabel = 'Importar modelo',
+    importButtonLabel = 'Importar planilha',
     extraDownloadOptions = [],
+    customExportActions = [],
     onImportSuccess,
+    buttonLabel = 'Excel',
 }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ left: 0, top: 0 });
@@ -32,9 +33,7 @@ const ExcelImportExportMenu = ({
         };
 
         const handleEscape = (event) => {
-            if (event.key === 'Escape') {
-                setIsMenuOpen(false);
-            }
+            if (event.key === 'Escape') setIsMenuOpen(false);
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -48,7 +47,7 @@ const ExcelImportExportMenu = ({
 
     const toggleMenu = (event) => {
         const rect = event.currentTarget.getBoundingClientRect();
-        const menuWidth = 200;
+        const menuWidth = 220;
         const margin = 8;
         let left = rect.right - menuWidth;
 
@@ -58,14 +57,14 @@ const ExcelImportExportMenu = ({
         }
 
         let top = rect.bottom + 6;
-        const estimatedMenuHeight = 96 + (extraDownloadOptions.length * 44);
+        const estimatedMenuHeight = 140 + extraDownloadOptions.length * 44;
 
         if (top + estimatedMenuHeight > window.innerHeight - margin) {
             top = rect.top - estimatedMenuHeight - 6;
         }
 
         setMenuPosition({ left, top });
-        setIsMenuOpen((current) => !current);
+        setIsMenuOpen((prev) => !prev);
     };
 
     const downloadExcelFile = async (url, downloadFileName, successMessage, errorMessage) => {
@@ -91,41 +90,38 @@ const ExcelImportExportMenu = ({
         }
     };
 
-    const downloadTemplate = () => {
+    const downloadTemplate = () =>
         downloadExcelFile(
             templateUrl,
             fileName,
             'Modelo exportado com sucesso!',
             'Erro ao exportar modelo Excel.'
         );
-    };
 
-    const downloadExtraOption = (option) => {
+    const downloadExtraOption = (option) =>
         downloadExcelFile(
             option.url,
             option.fileName,
             option.successMessage || 'Arquivo exportado com sucesso!',
             option.errorMessage || 'Erro ao exportar arquivo Excel.'
         );
-    };
 
     const handleImportClick = () => {
         setIsMenuOpen(false);
         fileInputRef.current?.click();
     };
 
-    const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => {
-            const result = reader.result;
-            const base64 = typeof result === 'string' ? result.split(',')[1] : '';
-            resolve(base64);
-        };
-
-        reader.onerror = () => reject(new Error('Não foi possível ler o arquivo.'));
-        reader.readAsDataURL(file);
-    });
+    const readFileAsBase64 = (file) =>
+        new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = reader.result;
+                const base64 = typeof result === 'string' ? result.split(',')[1] : '';
+                resolve(base64);
+            };
+            reader.onerror = () => reject(new Error('Não foi possível ler o arquivo.'));
+            reader.readAsDataURL(file);
+        });
 
     const handleFileChange = async (event) => {
         const file = event.target.files?.[0];
@@ -135,9 +131,7 @@ const ExcelImportExportMenu = ({
 
         const validExtensions = ['.xlsx', '.xls'];
         const fileNameLower = file.name.toLowerCase();
-        const isValidExtension = validExtensions.some((ext) => fileNameLower.endsWith(ext));
-
-        if (!isValidExtension) {
+        if (!validExtensions.some((ext) => fileNameLower.endsWith(ext))) {
             toast.error('Selecione um arquivo Excel (.xlsx ou .xls).');
             return;
         }
@@ -167,7 +161,7 @@ const ExcelImportExportMenu = ({
                 toast.error(`${preview}${suffix}`, { autoClose: 8000 });
             }
         } catch (error) {
-            console.error('Erro ao importar modelo:', error);
+            console.error('Erro ao importar:', error);
             const message = error.response?.data?.message || 'Erro ao importar arquivo Excel.';
             toast.error(message);
         } finally {
@@ -177,60 +171,136 @@ const ExcelImportExportMenu = ({
 
     const isBusy = isExporting || isImporting;
 
+    // Determina se há seção de exportar e/ou importar
+    const hasExportSection = !!templateUrl || extraDownloadOptions.length > 0 || customExportActions.length > 0;
+    const hasImportSection = !!importUrl;
+
     return (
-        <div className="export-menu-wrapper excel-import-export-menu" ref={wrapperRef}>
+        <div className="excel-import-export-menu" ref={wrapperRef}>
+            {/* Botão principal */}
             <button
                 type="button"
-                title="Importar / Exportar Excel"
-                className="btn-excel-menu"
+                title="Importar / Exportar"
+                className={`btn-excel-menu${isMenuOpen ? ' btn-excel-menu--open' : ''}`}
                 onClick={toggleMenu}
                 disabled={isBusy}
                 aria-expanded={isMenuOpen}
                 aria-haspopup="menu"
             >
-                <FaFileExcel />
-                <span className="btn-excel-menu-label">Excel</span>
+                <FaFileExcel className="btn-excel-icon" />
+                <span className="btn-excel-menu-label">
+                    {isBusy ? (isImporting ? 'Importando...' : 'Exportando...') : buttonLabel}
+                </span>
+                <FaChevronDown className={`btn-excel-chevron${isMenuOpen ? ' btn-excel-chevron--open' : ''}`} />
             </button>
 
+            {/* Menu dropdown */}
             {isMenuOpen && (
                 <div
-                    className="export-tooltip-menu"
+                    className="excel-dropdown-menu"
                     style={{ position: 'fixed', left: menuPosition.left, top: menuPosition.top, zIndex: 9999 }}
                     role="menu"
+                    aria-label="Opções de importação e exportação"
                 >
-                    <button
-                        type="button"
-                        className="export-option"
-                        onClick={downloadTemplate}
-                        disabled={isExporting}
-                        role="menuitem"
-                    >
-                        <FaFileDownload /> {templateButtonLabel}
-                    </button>
-                    <button
-                        type="button"
-                        className="export-option"
-                        onClick={handleImportClick}
-                        disabled={isImporting}
-                        role="menuitem"
-                    >
-                        <FaFileUpload /> {importButtonLabel}
-                    </button>
-                    {extraDownloadOptions.map((option) => (
-                        <button
-                            key={option.url}
-                            type="button"
-                            className="export-option"
-                            onClick={() => downloadExtraOption(option)}
-                            disabled={isExporting}
-                            role="menuitem"
-                        >
-                            <FaFileDownload /> {option.label}
-                        </button>
-                    ))}
+                    {/* Seção: Exportar */}
+                    {hasExportSection && (
+                        <div className="excel-dropdown-section">
+                            <span className="excel-dropdown-section-label">Exportar</span>
+
+                            {/* Ações customizadas com callback (ex.: PDF) */}
+                            {customExportActions.map((action, index) => (
+                                <button
+                                    key={index}
+                                    type="button"
+                                    className="excel-dropdown-item"
+                                    onClick={() => { setIsMenuOpen(false); action.onClick(); }}
+                                    disabled={isBusy}
+                                    role="menuitem"
+                                >
+                                    <span className={`excel-dropdown-item-icon ${action.iconClass || 'excel-dropdown-item-icon--custom'}`}>
+                                        {action.icon || <FaFileDownload />}
+                                    </span>
+                                    <span className="excel-dropdown-item-text">
+                                        <span className="excel-dropdown-item-title">{action.label}</span>
+                                        {action.description && (
+                                            <span className="excel-dropdown-item-desc">{action.description}</span>
+                                        )}
+                                    </span>
+                                </button>
+                            ))}
+
+                            {/* Download de template padrão */}
+                            {templateUrl && (
+                                <button
+                                    type="button"
+                                    className="excel-dropdown-item"
+                                    onClick={downloadTemplate}
+                                    disabled={isExporting}
+                                    role="menuitem"
+                                >
+                                    <span className="excel-dropdown-item-icon excel-dropdown-item-icon--export">
+                                        <FaFileDownload />
+                                    </span>
+                                    <span className="excel-dropdown-item-text">
+                                        <span className="excel-dropdown-item-title">{templateButtonLabel}</span>
+                                        <span className="excel-dropdown-item-desc">Baixar planilha modelo vazia</span>
+                                    </span>
+                                </button>
+                            )}
+
+                            {/* Downloads extras */}
+                            {extraDownloadOptions.map((option) => (
+                                <button
+                                    key={option.url}
+                                    type="button"
+                                    className="excel-dropdown-item"
+                                    onClick={() => downloadExtraOption(option)}
+                                    disabled={isExporting}
+                                    role="menuitem"
+                                >
+                                    <span className="excel-dropdown-item-icon excel-dropdown-item-icon--export">
+                                        <FaFileDownload />
+                                    </span>
+                                    <span className="excel-dropdown-item-text">
+                                        <span className="excel-dropdown-item-title">{option.label}</span>
+                                        {option.description && (
+                                            <span className="excel-dropdown-item-desc">{option.description}</span>
+                                        )}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Divisor entre seções */}
+                    {hasExportSection && hasImportSection && <div className="excel-dropdown-divider" />}
+
+                    {/* Seção: Importar */}
+                    {hasImportSection && (
+                        <div className="excel-dropdown-section">
+                            <span className="excel-dropdown-section-label">Importar</span>
+
+                            <button
+                                type="button"
+                                className="excel-dropdown-item"
+                                onClick={handleImportClick}
+                                disabled={isImporting}
+                                role="menuitem"
+                            >
+                                <span className="excel-dropdown-item-icon excel-dropdown-item-icon--import">
+                                    <FaFileUpload />
+                                </span>
+                                <span className="excel-dropdown-item-text">
+                                    <span className="excel-dropdown-item-title">{importButtonLabel}</span>
+                                    <span className="excel-dropdown-item-desc">Selecionar arquivo .xlsx / .xls</span>
+                                </span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
+            {/* Input de arquivo oculto */}
             <input
                 ref={fileInputRef}
                 type="file"

@@ -2,6 +2,8 @@ const usuariosModel = require('../model/usuariosModel');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
+const ALLOWED_ROLES = ['admin', 'user', 'orcamentista'];
+
 module.exports = {
     async register(req, res) {
         try {
@@ -11,6 +13,10 @@ module.exports = {
                 return res.status(400).json({ 
                     error: 'Nome, email e senha são obrigatórios' 
                 });
+            }
+
+            if (role && !ALLOWED_ROLES.includes(role)) {
+                return res.status(400).json({ error: 'Perfil de usuário inválido' });
             }
 
             const result = await usuariosModel.create({ 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const orcamentoController = require('../controller/orcamentoController');
-const { verifyLocalToken, isAdmin, isAdminOrManager, isAdminOrManagerOrOrcamentista, attachClienteId } = require('../middleware/authMiddleware');
+const { verifyLocalToken, isAdmin, isAdminOrOrcamentista, attachClienteId } = require('../middleware/authMiddleware');
 
 router.get('/', verifyLocalToken, attachClienteId, orcamentoController.findAll);
 router.get('/orcamentos/projetos', verifyLocalToken, attachClienteId, orcamentoController.getAllProjetos);
@@ -10,11 +10,11 @@ router.get('/orcamento/:id', verifyLocalToken, attachClienteId, orcamentoControl
 router.get('/orcamento/:id/export/pdf', verifyLocalToken, attachClienteId, orcamentoController.exportPdf);
 router.get('/orcamento/:id/export/excel', verifyLocalToken, attachClienteId, orcamentoController.exportExcel);
 
-router.post('/orcamento', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, orcamentoController.create);
-router.put('/orcamento/:id', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, orcamentoController.update);
-router.put('/orcamento/:id/test', verifyLocalToken, isAdminOrManager, orcamentoController.testUpdateValorTotal);
+router.post('/orcamento', verifyLocalToken, isAdminOrOrcamentista, attachClienteId, orcamentoController.create);
+router.put('/orcamento/:id', verifyLocalToken, isAdminOrOrcamentista, attachClienteId, orcamentoController.update);
+router.put('/orcamento/:id/test', verifyLocalToken, isAdmin, orcamentoController.testUpdateValorTotal);
 
-router.delete('/orcamento/:id', verifyLocalToken, isAdminOrManagerOrOrcamentista, attachClienteId, orcamentoController.delete);  
+router.delete('/orcamento/:id', verifyLocalToken, isAdminOrOrcamentista, attachClienteId, orcamentoController.delete);
 
 module.exports = router;
 

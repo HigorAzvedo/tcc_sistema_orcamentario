@@ -173,7 +173,6 @@ const Cadastro = () => {
             >
               <option value="user">Usuário</option>
               <option value="orcamentista">Orçamentista</option>
-              <option value="manager">Gerente</option>
               <option value="admin">Administrador</option>
             </select>
           </div>

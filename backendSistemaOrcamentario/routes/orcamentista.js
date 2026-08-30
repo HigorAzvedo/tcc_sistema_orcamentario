@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const orcamentistaController = require('../controller/orcamentistaController');
-const { verifyLocalToken, isAdmin, isAdminOrManager, isOrcamentista } = require('../middleware/authMiddleware');
+const { verifyLocalToken, isAdmin, isOrcamentista } = require('../middleware/authMiddleware');
 
 router.get('/', verifyLocalToken, orcamentistaController.findAll);
 router.get('/orcamentista/:id', verifyLocalToken, orcamentistaController.findById);
 
-// Rota protegida para admin criar orçamentista
-router.post('/orcamentista', verifyLocalToken, isAdminOrManager, orcamentistaController.create);
-router.put('/orcamentista/:id', verifyLocalToken, isAdminOrManager, orcamentistaController.update);
+// Rotas protegidas para administrador gerenciar orçamentistas.
+router.post('/orcamentista', verifyLocalToken, isAdmin, orcamentistaController.create);
+router.put('/orcamentista/:id', verifyLocalToken, isAdmin, orcamentistaController.update);
 
 router.delete('/orcamentista/:id', verifyLocalToken, isAdmin, orcamentistaController.delete); 
 
-// Rotas para gerenciar vínculos com clientes (Admin/Manager)
-router.post('/vincular-cliente', verifyLocalToken, isAdminOrManager, orcamentistaController.vincularCliente);
-router.delete('/desvincular-cliente/:orcamentistaId/:clienteId', verifyLocalToken, isAdminOrManager, orcamentistaController.desvincularCliente);
+// Rotas para o administrador gerenciar vínculos com clientes.
+router.post('/vincular-cliente', verifyLocalToken, isAdmin, orcamentistaController.vincularCliente);
+router.delete('/desvincular-cliente/:orcamentistaId/:clienteId', verifyLocalToken, isAdmin, orcamentistaController.desvincularCliente);
 router.get('/clientes-vinculados/:id', verifyLocalToken, orcamentistaController.getClientesVinculados);
 
 // Rotas para o orçamentista acessar seus próprios dados

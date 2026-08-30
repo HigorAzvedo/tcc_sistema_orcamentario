@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import FilterableSelect from '../FilterableSelect';
+import { toast } from 'react-toastify';
 import './style.css';
 
 const Form = ({ fields, onSubmit, initialValues = {}, submitButtonText = 'Salvar' }) => {
@@ -7,11 +8,23 @@ const Form = ({ fields, onSubmit, initialValues = {}, submitButtonText = 'Salvar
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setValues({ ...values, [name]: value });
+    setValues((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const hasDateRange =
+      fields.some((f) => f.name === 'dataInicio') &&
+      fields.some((f) => f.name === 'dataFim');
+
+    if (hasDateRange && values.dataInicio && values.dataFim) {
+      if (new Date(values.dataInicio) > new Date(values.dataFim)) {
+        toast.error('A Data de Início não pode ser maior que a Data de Fim.');
+        return;
+      }
+    }
+
     onSubmit(values);
   };
 
@@ -39,7 +52,7 @@ const Form = ({ fields, onSubmit, initialValues = {}, submitButtonText = 'Salvar
           ) : field.type === 'searchSelect' ? (
             <FilterableSelect
               value={values[field.name] || ''}
-              onChange={(value) => setValues({ ...values, [field.name]: value })}
+              onChange={(value) => setValues((prev) => ({ ...prev, [field.name]: value }))}
               options={field.options || []}
               placeholder={field.placeholder || 'Selecione'}
               searchPlaceholder={field.searchPlaceholder || 'Buscar...'}
@@ -55,6 +68,8 @@ const Form = ({ fields, onSubmit, initialValues = {}, submitButtonText = 'Salvar
               onChange={handleChange}
               required={field.required}
               disabled={field.disabled}
+              min={field.name === 'dataFim' && values.dataInicio ? values.dataInicio : undefined}
+              max={field.name === 'dataInicio' && values.dataFim ? values.dataFim : undefined}
             />
           )}
         </div>

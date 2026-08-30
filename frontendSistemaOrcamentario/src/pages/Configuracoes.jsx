@@ -168,8 +168,7 @@ const Configuracoes = () => {
                   <input
                     type="text"
                     id="role"
-                    value={user?.role === 'admin' ? 'Administrador' : 
-                           user?.role === 'manager' ? 'Gerente' : 
+                    value={user?.role === 'admin' ? 'Administrador' :
                            user?.role === 'orcamentista' ? 'Orçamentista' : 'Usuário'}
                     disabled
                     readOnly
